@@ -1,0 +1,4 @@
+tcp_service:
+  ip: 127.0.0.1
+  port: 2233
+  max_conn: 1024
