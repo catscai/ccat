@@ -23,9 +23,10 @@ type GlobalCfg struct {
 var AppCfg *GlobalCfg
 
 type TcpServiceCfg struct {
-	IP      string `yaml:"ip"`
-	Port    uint32 `yaml:"port"`
-	MaxConn uint32 `yaml:"max_conn"`
+	IP         string `yaml:"ip"`
+	Port       uint32 `yaml:"port"`
+	MaxConn    uint32 `yaml:"max_conn"`
+	MaxPackLen uint32 `yaml:"max_pack_len"` // 最大包长度,0-表示不限制
 }
 
 func Reload() error {
@@ -36,6 +37,10 @@ func Reload() error {
 	}
 	cfg := GlobalCfg{
 		IsTcpService: false,
+		TcpCfg: TcpServiceCfg{
+			MaxConn:    1024, // 默认最大连接数
+			MaxPackLen: 0,    // 默认最大包长度
+		},
 	}
 	if err = yaml.Unmarshal(data, &cfg); err != nil {
 		fmt.Println("[Config] yaml Unmarshal err", err)

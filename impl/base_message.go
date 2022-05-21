@@ -28,13 +28,14 @@ func (bm *BaseMessage) Pack() ([]byte, error) {
 func (bm *BaseMessage) Unpack(data []byte) error {
 	reader := bytes.NewReader(data)
 
-	if err := binary.Read(reader, binary.LittleEndian, bm.PackType); err != nil {
+	if err := binary.Read(reader, binary.LittleEndian, &bm.PackType); err != nil {
 		return err
 	}
 
-	if err := binary.Read(reader, binary.LittleEndian, bm.Data); err != nil {
-		return err
-	}
+	//if err := binary.Read(reader, binary.LittleEndian, &bm.Data); err != nil {
+	//	return err
+	//}
 
+	bm.Data = data[4:]
 	return nil
 }
