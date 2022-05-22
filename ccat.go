@@ -11,11 +11,11 @@ var gApp *impl.App
 
 func init() {
 	gApp = &impl.App{
-		Servers: make([]iface.IServer, 0),
+		ServerMap: make(map[string]iface.IServer),
 	}
 	if config.AppCfg.IsTcpService {
 		tcpCfg := &config.AppCfg.TcpCfg
-		AddServer(NewTcpService("tcp4", tcpCfg.IP, tcpCfg.Port))
+		AddServer(NewTcpService(tcpCfg.Name, "tcp4", tcpCfg.IP, tcpCfg.Port))
 	}
 }
 
@@ -23,14 +23,23 @@ func AddServer(server iface.IServer) {
 	gApp.AddServer(server)
 }
 
+func GetServer(name string) iface.IServer {
+	return gApp.GetServer(name)
+}
+
 func Run() {
 	gApp.Run()
 }
 
-func NewTcpService(IPVer, IP string, port uint32) iface.IServer {
+func NewTcpService(name, ipVer, ip string, port uint32) iface.IServer {
 	return &impl.TcpService{
-		IPVer: IPVer,
-		IP:    IP,
-		Port:  port,
+		Name:     name,
+		IPVer:    ipVer,
+		IP:       ip,
+		Port:     port,
+		DataPack: &impl.DefaultDataPack{},
+		Dispatcher: &impl.BaseDispatcher{
+			MsgHandlerMap: make(map[interface{}]func(conn iface.IConn, data []byte) error),
+		},
 	}
 }

@@ -1,4 +1,5 @@
 tcp_service:
+  name: tcp_test    # 服务名称 用于区分多个service
   ip: 127.0.0.1
   port: 2233
   max_conn: 1024

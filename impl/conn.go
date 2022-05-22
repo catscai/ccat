@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"strings"
 )
 
 type Conn struct {
@@ -14,6 +13,8 @@ type Conn struct {
 	ExitChan chan bool     // 退出管道通知
 	Server   iface.IServer // 所属服务
 }
+
+var ConnErr = errors.New("conn error")
 
 // Start 开始处理连接，接收读消息
 func (c *Conn) Start() {
@@ -29,15 +30,12 @@ func (c *Conn) Start() {
 			data, err := dataPack.ParseData(c)
 			if err != nil {
 				fmt.Println("Conn Start ParseData err", err)
-				continue
+				return
 			}
-			fmt.Println("Receive data ", string(data))
+			//fmt.Println("Receive data", string(data))
 
-			// todo 暂时简单回显
-			if err = c.SendMsg([]byte(strings.ToUpper(string(data)))); err != nil {
-				fmt.Println("Conn SendMsg err ", err)
-			}
-
+			// 将数据交给业务分发器分发
+			c.Server.GetDispatcher().Dispatch(c, data)
 		}
 	}
 }

@@ -8,10 +8,12 @@ import (
 
 // TcpService tcp 服务
 type TcpService struct {
-	IPVer    string
-	IP       string
-	Port     uint32
-	DataPack iface.IDataPack
+	Name       string
+	IPVer      string
+	IP         string
+	Port       uint32
+	DataPack   iface.IDataPack
+	Dispatcher iface.IDispatcher
 }
 
 // Start 创建tcp监听
@@ -58,4 +60,24 @@ func (t *TcpService) GetDataPack() iface.IDataPack {
 // SetDataPack 设置数据包处理对象
 func (t *TcpService) SetDataPack(packDeal iface.IDataPack) {
 	t.DataPack = packDeal
+}
+
+// SetDispatcher 设置消息分发器
+func (t *TcpService) SetDispatcher(dispatcher iface.IDispatcher) {
+	t.Dispatcher = dispatcher
+}
+
+// GetDispatcher 获取消息分发器
+func (t *TcpService) GetDispatcher() iface.IDispatcher {
+	return t.Dispatcher
+}
+
+// GetAddr 获取服务监听地址
+func (t *TcpService) GetAddr() string {
+	return fmt.Sprintf("%s:%d", t.IP, t.Port)
+}
+
+// GetName 获取服务名
+func (t *TcpService) GetName() string {
+	return t.Name
 }

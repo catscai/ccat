@@ -23,6 +23,7 @@ type GlobalCfg struct {
 var AppCfg *GlobalCfg
 
 type TcpServiceCfg struct {
+	Name       string `yaml:"name"` // 服务名称用于区分多个服务
 	IP         string `yaml:"ip"`
 	Port       uint32 `yaml:"port"`
 	MaxConn    uint32 `yaml:"max_conn"`
