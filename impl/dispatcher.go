@@ -12,15 +12,12 @@ type BaseDispatcher struct {
 }
 
 // Dispatch 将消息分发给处理函数
-func (bd *BaseDispatcher) Dispatch(conn iface.IConn, data []byte) {
+func (bd *BaseDispatcher) Dispatch(request iface.IRequest) {
 	fmt.Println("Start Dispatch message")
-	msg := DefaultMessage{}
-	msg.Unpack(data)
-	fmt.Printf("Dispatch Unpack msg:%+v\n", msg)
-	if f, ok := bd.MsgHandlerMap[msg.GetPackType()]; ok {
-		f(conn, msg.GetData())
+	if f, ok := bd.MsgHandlerMap[request.GetHeaderPack().GetPackType()]; ok {
+		f(request.GetConn(), request.GetHeaderPack().GetData())
 	} else {
-		fmt.Println("Not found message handler, packType", msg.GetPackType())
+		fmt.Println("Not found message handler, packType", request.GetHeaderPack().GetPackType())
 	}
 }
 

@@ -20,22 +20,31 @@ var ConnErr = errors.New("conn error")
 func (c *Conn) Start() {
 	fmt.Println("Conn Start...", "RemoteAddr ", c.C.RemoteAddr())
 	defer c.Stop()
-	dataPack := c.Server.GetDataPack()
 	// 接收连接消息
 	for {
 		select {
 		case <-c.ExitChan:
 			break
 		default:
-			data, err := dataPack.ParseData(c)
+			// 处理tcp粘包
+			data, err := c.Server.GetDataPack().ParseData(c)
 			if err != nil {
 				fmt.Println("Conn Start ParseData err", err)
 				return
 			}
 			//fmt.Println("Receive data", string(data))
-
-			// 将数据交给业务分发器分发
-			c.Server.GetDispatcher().Dispatch(c, data)
+			// 解析出包头
+			header, err := c.Server.GetHeaderParser().HeaderUnpack(data)
+			if err != nil {
+				fmt.Println("Conn HeaderUnpack err", err)
+				return
+			}
+			r := Request{
+				Conn:       c,
+				HeaderPack: header,
+			}
+			// 将数据交给业务处理工作者组
+			c.Server.GetWorkerGroup().SendTask(&r)
 		}
 	}
 }

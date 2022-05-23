@@ -1,5 +1,8 @@
 tcp_service:
-  name: tcp_test    # 服务名称 用于区分多个service
-  ip: 127.0.0.1
-  port: 2233
-  max_conn: 1024
+  tcp_test: # 服务名称 用于区分多个service
+    ip: 127.0.0.1
+    port: 2233
+    max_conn: 1024
+    worker_group: # 工作者组配置
+      size: 10        # 工作者数量
+      queue_length: 10  # 包队列长度

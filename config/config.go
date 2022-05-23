@@ -16,18 +16,28 @@ func init() {
 var cfgPath = "./conf/ccat.yaml"
 
 type GlobalCfg struct {
-	TcpCfg       TcpServiceCfg `yaml:"tcp_service"`
+	TcpCfg       map[string]*TcpServiceCfg `yaml:"tcp_service"`
 	IsTcpService bool
 }
 
 var AppCfg *GlobalCfg
 
 type TcpServiceCfg struct {
-	Name       string `yaml:"name"` // 服务名称用于区分多个服务
-	IP         string `yaml:"ip"`
-	Port       uint32 `yaml:"port"`
-	MaxConn    uint32 `yaml:"max_conn"`
+	BaseServiceCfg
+	Name        string
+	IP          string          `yaml:"ip"`
+	Port        uint32          `yaml:"port"`
+	MaxConn     uint32          `yaml:"max_conn"`
+	WorkerGroup *WorkerGroupCfg `yaml:"worker_group"`
+}
+
+type BaseServiceCfg struct {
 	MaxPackLen uint32 `yaml:"max_pack_len"` // 最大包长度,0-表示不限制
+}
+
+type WorkerGroupCfg struct {
+	Size        uint32 `yaml:"size"`
+	QueueLength uint32 `yaml:"queue_length"`
 }
 
 func Reload() error {
@@ -38,18 +48,35 @@ func Reload() error {
 	}
 	cfg := GlobalCfg{
 		IsTcpService: false,
-		TcpCfg: TcpServiceCfg{
-			MaxConn:    1024, // 默认最大连接数
-			MaxPackLen: 0,    // 默认最大包长度
-		},
 	}
 	if err = yaml.Unmarshal(data, &cfg); err != nil {
 		fmt.Println("[Config] yaml Unmarshal err", err)
 		return err
 	}
-	if len(cfg.TcpCfg.IP) > 0 && cfg.TcpCfg.Port > 0 {
+	for name := range cfg.TcpCfg {
+		cfg.TcpCfg[name].Name = name
+		fmt.Printf("[Config] Tcp info %+v\n", *cfg.TcpCfg[name])
+	}
+	if len(cfg.TcpCfg) > 0 {
 		cfg.IsTcpService = true
 	}
+	fmt.Printf("[Config] global %+v\n", cfg)
 	AppCfg = &cfg
+	return nil
+}
+
+func GetTcpServiceCfg(name string) *TcpServiceCfg {
+	if cfg, ok := AppCfg.TcpCfg[name]; ok {
+		return cfg
+	}
+
+	return nil
+}
+
+func GetBaseServiceCfg(name string) *BaseServiceCfg {
+	if cfg, ok := AppCfg.TcpCfg[name]; ok {
+		return &cfg.BaseServiceCfg
+	}
+
 	return nil
 }

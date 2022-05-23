@@ -12,6 +12,11 @@ type IServer interface {
 	SetDispatcher(dispatcher IDispatcher) // 设置消息分发器
 	GetDispatcher() IDispatcher           // 获取消息分发器
 
+	SetHeaderParser(parser IHeaderPackParser) // 设置包头解析器
+	GetHeaderParser() IHeaderPackParser       // 获取包头解析器
+
+	GetWorkerGroup() IWorkerGroup // 获取工作者组
+
 	GetAddr() string // 获取服务监听地址
 	GetName() string // 获取服务名
 }
