@@ -1,4 +1,4 @@
-package iface
+package imsg
 
 // IHeaderPack 包头
 type IHeaderPack interface {

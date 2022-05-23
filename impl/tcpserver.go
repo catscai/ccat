@@ -18,6 +18,7 @@ type TcpService struct {
 	HeaderParser iface.IHeaderPackParser // 包头解析器
 	WorkerGroup  iface.IWorkerGroup      // 工作者组
 	ExitChan     chan bool               // 退出管道
+	ConnManager  iface.IConnManager
 }
 
 // Start 创建tcp监听
@@ -31,7 +32,12 @@ func (t *TcpService) Start() {
 	fmt.Println("[Tcp Service] Start listen...")
 	// 退出关闭 释放资源
 	defer t.Stop()
-
+	maxConnLimit := uint32(0)
+	cfg := config.GetTcpServiceCfg(t.GetName())
+	if cfg != nil {
+		maxConnLimit = cfg.MaxConn
+	}
+	var connID uint32
 	for {
 		select {
 		case <-t.ExitChan:
@@ -42,13 +48,25 @@ func (t *TcpService) Start() {
 				fmt.Println("[Tcp Service] accept err", err)
 				break
 			}
+
+			// 超出最大连接后，拒绝连接
+			if maxConnLimit > 0 && connID >= maxConnLimit {
+				fmt.Println("[Tcp Service] the number of connection over limit")
+				conn.Close()
+				continue
+			}
 			// 处理连接读
 			catConn := &Conn{
 				C:        conn,
 				IsValid:  true,
 				ExitChan: make(chan bool, 1),
 				Server:   t,
+				ConnID:   connID,
 			}
+
+			// 将连接加入管理者
+			t.ConnManager.Add(catConn)
+			connID++
 			go catConn.Start()
 		}
 	}
@@ -58,6 +76,7 @@ func (t *TcpService) Start() {
 func (t *TcpService) Stop() {
 	close(t.ExitChan)
 	t.WorkerGroup.Stop()
+	t.ConnManager.Clear()
 }
 
 func (t *TcpService) Run() {

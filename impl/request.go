@@ -1,10 +1,13 @@
 package impl
 
-import "ccat/iface"
+import (
+	"ccat/iface"
+	"ccat/iface/imsg"
+)
 
 type Request struct {
 	Conn       iface.IConn
-	HeaderPack iface.IHeaderPack
+	HeaderPack imsg.IHeaderPack
 }
 
 // GetConn 获取连接信息
@@ -13,6 +16,6 @@ func (r *Request) GetConn() iface.IConn {
 }
 
 // GetHeaderPack 获取头数据包
-func (r *Request) GetHeaderPack() iface.IHeaderPack {
+func (r *Request) GetHeaderPack() imsg.IHeaderPack {
 	return r.HeaderPack
 }

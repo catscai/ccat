@@ -9,6 +9,7 @@ import (
 
 type Conn struct {
 	C        net.Conn      // go连接对象
+	ConnID   uint32        // 连接id
 	IsValid  bool          // 该连接是否有效，是否关闭
 	ExitChan chan bool     // 退出管道通知
 	Server   iface.IServer // 所属服务
@@ -73,4 +74,9 @@ func (c *Conn) Valid() bool {
 
 func (c *Conn) GetConn() net.Conn {
 	return c.C
+}
+
+// GetConnID 获取连接ID
+func (c *Conn) GetConnID() uint32 {
+	return c.ConnID
 }

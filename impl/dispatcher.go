@@ -37,7 +37,11 @@ func (bd *BaseDispatcher) RegisterHandler(packType interface{}, message iface.IM
 		}
 
 		// todo 加一个recover panic 捕捉业务处理时(deal执行时)的异常情况
-
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Println("[Panic] deal req:", r)
+			}
+		}()
 		// 调用业务回调
 		if err := deal(conn, req); err != nil {
 			fmt.Println("Business Deal err", err)

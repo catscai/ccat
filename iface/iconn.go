@@ -9,4 +9,5 @@ type IConn interface {
 	Valid() bool          // 当前连接是否有效
 
 	GetConn() net.Conn // 获取go连接
+	GetConnID() uint32 // 获取连接ID
 }

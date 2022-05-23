@@ -55,6 +55,12 @@ func Reload() error {
 	}
 	for name := range cfg.TcpCfg {
 		cfg.TcpCfg[name].Name = name
+		if cfg.TcpCfg[name].WorkerGroup == nil {
+			cfg.TcpCfg[name].WorkerGroup = &WorkerGroupCfg{
+				Size:        10,
+				QueueLength: 10,
+			}
+		}
 		fmt.Printf("[Config] Tcp info %+v\n", *cfg.TcpCfg[name])
 	}
 	if len(cfg.TcpCfg) > 0 {
@@ -66,8 +72,8 @@ func Reload() error {
 }
 
 func GetTcpServiceCfg(name string) *TcpServiceCfg {
-	if cfg, ok := AppCfg.TcpCfg[name]; ok {
-		return cfg
+	if _, ok := AppCfg.TcpCfg[name]; ok {
+		return AppCfg.TcpCfg[name]
 	}
 
 	return nil
