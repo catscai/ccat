@@ -9,14 +9,14 @@ import (
 
 // BaseDispatcher 保存包与回调业务映射关系，业务分发
 type BaseDispatcher struct {
-	MsgHandlerMap map[interface{}]func(conn iface.IConn, data []byte) error
+	MsgHandlerMap map[interface{}]func(request iface.IRequest, data []byte) error
 }
 
 // Dispatch 将消息分发给处理函数
 func (bd *BaseDispatcher) Dispatch(request iface.IRequest) {
 	fmt.Println("Start Dispatch message")
 	if f, ok := bd.MsgHandlerMap[request.GetHeaderPack().GetPackType()]; ok {
-		f(request.GetConn(), request.GetHeaderPack().GetData())
+		f(request, request.GetHeaderPack().GetData())
 	} else {
 		fmt.Println("Not found message handler, packType", request.GetHeaderPack().GetPackType())
 	}
@@ -28,7 +28,7 @@ func (bd *BaseDispatcher) RegisterHandler(packType interface{}, message imsg.IMe
 	msgType := reflect.TypeOf(message).Elem()
 	msgTypeName := msgType.String()
 	fmt.Println("msgTypeName", msgTypeName)
-	handler := func(conn iface.IConn, data []byte) error {
+	handler := func(request iface.IRequest, data []byte) error {
 		// 利用反射创建新对象
 		req := reflect.New(msgType).Elem().Addr().Interface().(imsg.IMessage)
 		fmt.Println("handler req", req)
@@ -44,7 +44,7 @@ func (bd *BaseDispatcher) RegisterHandler(packType interface{}, message imsg.IMe
 			}
 		}()
 		// 调用业务回调
-		if err := deal(conn, req); err != nil {
+		if err := deal(request, req); err != nil {
 			fmt.Println("Business Deal err", err)
 			return err
 		}

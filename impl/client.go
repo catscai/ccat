@@ -131,12 +131,14 @@ func (client *Client) beginRead() {
 			}
 
 			fmt.Println("[Client] Recv data", header)
-			if client.process != nil {
-				client.process(client.Conn, header)
-			}
 			resChan := client.getChan(header.GetSessionID())
 			if resChan != nil {
 				resChan <- data
+			} else {
+				fmt.Println("client.getChan resChan is nil", header)
+			}
+			if client.process != nil {
+				client.process(client.Conn, header)
 			}
 		}
 	}

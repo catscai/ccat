@@ -44,7 +44,7 @@ func NewTcpService(name, ipVer, ip string, port uint32) iface.IServer {
 		ExitChan: make(chan bool, 1),
 		DataPack: &msg.DefaultDataPack{},
 		Dispatcher: &impl.BaseDispatcher{
-			MsgHandlerMap: make(map[interface{}]func(conn iface.IConn, data []byte) error),
+			MsgHandlerMap: make(map[interface{}]func(request iface.IRequest, data []byte) error),
 		},
 		HeaderParser: &msg.DefaultHeaderParser{},
 		WorkerGroup:  &impl.WorkerGroup{},

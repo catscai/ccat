@@ -6,7 +6,6 @@ import (
 	"ccat/iface/imsg"
 	"ccat/impl/msg"
 	"fmt"
-	"time"
 )
 
 type EchoMessage struct {
@@ -23,7 +22,7 @@ func (em *EchoMessage) Pack() ([]byte, error) {
 	return []byte(em.name), nil
 }
 
-func Deal(conn iface.IConn, message imsg.IMessage) error {
+func Deal(request iface.IRequest, message imsg.IMessage) error {
 	fmt.Println("deal recv message start")
 	defer fmt.Println("deal recv message end")
 	req := message.(*EchoMessage)
@@ -36,10 +35,10 @@ func Deal(conn iface.IConn, message imsg.IMessage) error {
 	echoData, _ := echo.Pack()
 	header := msg.DefaultHeader{
 		PackType:  2,
-		SessionID: uint64(time.Now().UnixNano()),
+		SessionID: request.GetHeaderPack().GetSessionID().(uint64),
 		Data:      echoData,
 	}
-	conn.SendMsg(&header)
+	request.GetConn().SendMsg(&header)
 	fmt.Println("deal SendMsg", header)
 	return nil
 }

@@ -11,4 +11,4 @@ type IDispatcher interface {
 	Remove(packType interface{})                                                      // 删除回调映射关系
 }
 
-type MsgHandlerFunc func(conn IConn, iMessage imsg.IMessage) error
+type MsgHandlerFunc func(request IRequest, iMessage imsg.IMessage) error
