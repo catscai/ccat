@@ -21,6 +21,8 @@ type IServer interface {
 
 	GetWorkerGroup() IWorkerGroup // 获取工作者组
 
+	GetConnManager() IConnManager // 获取连接管理器
+
 	GetAddr() string // 获取服务监听地址
 	GetName() string // 获取服务名
 }

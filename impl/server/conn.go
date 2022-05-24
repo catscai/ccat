@@ -5,42 +5,42 @@ import (
 	"ccat/iface"
 	"ccat/iface/imsg"
 	"ccat/impl"
+	"context"
 	"errors"
 	"fmt"
 	"net"
 )
 
 type Conn struct {
-	C        net.Conn      // go连接对象
-	ConnID   uint32        // 连接id
-	IsValid  bool          // 该连接是否有效，是否关闭
-	ExitChan chan bool     // 退出管道通知
-	Server   iface.IServer // 所属服务
+	C       net.Conn        // go连接对象
+	ConnID  uint32          // 连接id
+	IsValid bool            // 该连接是否有效，是否关闭
+	ctx     context.Context // 用来处理关闭
+	cancel  context.CancelFunc
+	Server  iface.IServer // 所属服务
 }
 
 var ConnErr = errors.New("conn error")
 
 func NewConnection(c net.Conn, connID uint32, ser iface.IServer) *Conn {
 	catConn := &Conn{
-		C:        c,
-		IsValid:  true,
-		ExitChan: make(chan bool, 1),
-		Server:   ser,
-		ConnID:   connID,
+		C:       c,
+		IsValid: true,
+		Server:  ser,
+		ConnID:  connID,
 	}
 
 	return catConn
 }
 
-// Start 开始处理连接，接收读消息
-func (c *Conn) Start() {
+func (c *Conn) StartReader() {
 	fmt.Println("Conn Start...", "RemoteAddr ", c.C.RemoteAddr())
 	defer c.Stop()
 	// 接收连接消息
 	for {
 		select {
-		case <-c.ExitChan:
-			break
+		case <-c.ctx.Done():
+			return
 		default:
 			// 处理tcp粘包
 			data, err := c.Server.GetDataPack().ParseData(c.C)
@@ -70,12 +70,22 @@ func (c *Conn) Start() {
 	}
 }
 
+// Start 开始处理连接，接收读消息
+func (c *Conn) Start() {
+	c.ctx, c.cancel = context.WithCancel(context.Background())
+
+	go c.StartReader()
+
+	select {
+	case <-c.ctx.Done():
+		c.release()
+		return
+	}
+}
+
 // Stop 关闭连接释放资源
 func (c *Conn) Stop() {
-	fmt.Println("Conn Stop RemoteAddr ", c.C.RemoteAddr())
-	c.IsValid = false
-	c.C.Close()
-	close(c.ExitChan)
+	c.cancel() // 发送取消信号
 }
 
 // SendMsg 发送消息包
@@ -113,4 +123,13 @@ func (c *Conn) GetConn() net.Conn {
 // GetConnID 获取连接ID
 func (c *Conn) GetConnID() uint32 {
 	return c.ConnID
+}
+
+// 释放资源
+func (c *Conn) release() {
+	fmt.Println("Conn release RemoteAddr ", c.C.RemoteAddr())
+	c.IsValid = false
+	c.C.Close()
+	// 从连接管理器中删除
+	c.Server.GetConnManager().Remove(c)
 }

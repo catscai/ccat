@@ -39,7 +39,7 @@ func process(conn net.Conn, pack imsg.IHeaderPack) error {
 func main() {
 	client := impl.NewClient(&msg.DefaultDataPack{}, &msg.DefaultHeaderParser{}, 10, time.Millisecond*300)
 
-	err := client.Connection("tcp4", "127.0.0.1:2233", time.Millisecond*300)
+	err := client.Connection("tcp4", "127.0.0.1:2233", time.Second)
 	if err != nil {
 		fmt.Println("Connection failed", err)
 		return
@@ -57,9 +57,15 @@ func main() {
 			Data:      echoData,
 		}
 
-		if err = client.SendASync(&header); err != nil {
+		//if err = client.SendASync(&header); err != nil {
+		//	return
+		//}
+		rsp := msg.DefaultHeader{}
+		if err = client.Send(&header, &rsp); err != nil {
+			fmt.Println("Send err", err)
 			return
 		}
+		fmt.Println("Send data and Recv req:", header, "rsp:", rsp)
 		fmt.Println("Send data header", header, "time:", time.Now().Unix())
 		time.Sleep(time.Second)
 	}

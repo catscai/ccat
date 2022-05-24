@@ -119,6 +119,11 @@ func (t *TcpService) GetWorkerGroup() iface.IWorkerGroup {
 	return t.WorkerGroup
 }
 
+// GetConnManager 获取连接管理器
+func (t *TcpService) GetConnManager() iface.IConnManager {
+	return t.ConnManager
+}
+
 // GetAddr 获取服务监听地址
 func (t *TcpService) GetAddr() string {
 	return fmt.Sprintf("%s:%d", t.IP, t.Port)

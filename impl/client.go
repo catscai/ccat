@@ -2,6 +2,7 @@ package impl
 
 import (
 	"ccat/iface/imsg"
+	"context"
 	"errors"
 	"fmt"
 	"net"
@@ -15,11 +16,12 @@ type Client struct {
 	HeaderParser   imsg.IHeaderPackParser
 	process        func(conn net.Conn, header imsg.IHeaderPack) error
 	isValid        bool
-	exitChan       chan bool
 	sendQueue      chan imsg.IHeaderPack
 	sessionChanMap map[interface{}]chan []byte
 	mutex          sync.RWMutex
 	timeOut        time.Duration
+	ctx            context.Context
+	cancel         context.CancelFunc
 }
 
 func NewClient(dataPack imsg.IDataPack, headerParser imsg.IHeaderPackParser, sendChanLen uint32, sendTimeOut time.Duration) *Client {
@@ -27,7 +29,6 @@ func NewClient(dataPack imsg.IDataPack, headerParser imsg.IHeaderPackParser, sen
 		DataPack:       dataPack,
 		HeaderParser:   headerParser,
 		sendQueue:      make(chan imsg.IHeaderPack, sendChanLen),
-		exitChan:       make(chan bool, 1),
 		sessionChanMap: make(map[interface{}]chan []byte),
 		isValid:        false,
 		timeOut:        sendTimeOut,
@@ -47,9 +48,11 @@ func (client *Client) Connection(ipVer, address string, timeout time.Duration) e
 	client.Conn = conn
 	client.isValid = true
 
+	client.ctx, client.cancel = context.WithCancel(context.Background())
 	// 连接成功,创建读写协程
 	go client.beginRead()
 	go client.beginWrite()
+	go client.release()
 	return nil
 }
 
@@ -113,7 +116,7 @@ func (client *Client) beginRead() {
 	defer client.Close()
 	for {
 		select {
-		case <-client.exitChan:
+		case <-client.ctx.Done():
 			return
 		default:
 			data, err := client.DataPack.ParseData(client.Conn)
@@ -142,10 +145,9 @@ func (client *Client) beginRead() {
 func (client *Client) beginWrite() {
 	fmt.Println("[Client] beginWrite start...")
 	defer client.Close()
-
 	for {
 		select {
-		case <-client.exitChan:
+		case <-client.ctx.Done():
 			return
 		case header := <-client.sendQueue:
 			// 发送队列已经是用户封装好的header了，所以不需要再次封装包头
@@ -171,10 +173,7 @@ func (client *Client) beginWrite() {
 
 // Close 关闭连接
 func (client *Client) Close() {
-	client.Conn.Close()
-	client.isValid = false
-	close(client.exitChan)
-	close(client.sendQueue)
+	client.cancel() // 发送取消信号
 	fmt.Println("[Client] Close..")
 }
 
@@ -204,5 +203,15 @@ func (client *Client) delChan(sessionID interface{}) {
 	if _, ok := client.sessionChanMap[sessionID]; ok {
 		close(client.sessionChanMap[sessionID])
 		delete(client.sessionChanMap, sessionID)
+	}
+}
+
+func (client *Client) release() {
+	select {
+	case <-client.ctx.Done():
+		client.Conn.Close()
+		client.isValid = false
+		close(client.sendQueue)
+		return
 	}
 }
