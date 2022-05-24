@@ -37,11 +37,9 @@ func process(conn net.Conn, pack imsg.IHeaderPack) error {
 }
 
 func main() {
-	client := impl.Client{
-		DataPack:     &msg.DefaultDataPack{},
-		HeaderParser: &msg.DefaultHeaderParser{},
-	}
-	err := client.Connection("tcp4", "127.0.0.1:2233", 10, 300)
+	client := impl.NewClient(&msg.DefaultDataPack{}, &msg.DefaultHeaderParser{}, 10, time.Millisecond*300)
+
+	err := client.Connection("tcp4", "127.0.0.1:2233", time.Millisecond*300)
 	if err != nil {
 		fmt.Println("Connection failed", err)
 		return

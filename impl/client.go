@@ -19,23 +19,33 @@ type Client struct {
 	sendQueue      chan imsg.IHeaderPack
 	sessionChanMap map[interface{}]chan []byte
 	mutex          sync.RWMutex
-	timeOut        uint32
+	timeOut        time.Duration
+}
+
+func NewClient(dataPack imsg.IDataPack, headerParser imsg.IHeaderPackParser, sendChanLen uint32, sendTimeOut time.Duration) *Client {
+	client := &Client{
+		DataPack:       dataPack,
+		HeaderParser:   headerParser,
+		sendQueue:      make(chan imsg.IHeaderPack, sendChanLen),
+		exitChan:       make(chan bool, 1),
+		sessionChanMap: make(map[interface{}]chan []byte),
+		isValid:        false,
+		timeOut:        sendTimeOut,
+		process:        nil,
+	}
+	return client
 }
 
 // Connection 连接服务器
-func (client *Client) Connection(ipVer, address string, chanLen, timeout uint32) error {
+func (client *Client) Connection(ipVer, address string, timeout time.Duration) error {
 	fmt.Println("[Client] Connection start...", "ipVer", ipVer, "address", address)
-	conn, err := net.Dial(ipVer, address)
+	conn, err := net.DialTimeout(ipVer, address, timeout)
 	if err != nil {
 		fmt.Println("[Client] Connection err", err)
 		return err
 	}
 	client.Conn = conn
 	client.isValid = true
-	client.sendQueue = make(chan imsg.IHeaderPack, chanLen)
-	client.exitChan = make(chan bool, 1)
-	client.sessionChanMap = make(map[interface{}]chan []byte)
-	client.timeOut = timeout
 
 	// 连接成功,创建读写协程
 	go client.beginRead()
@@ -67,7 +77,7 @@ func (client *Client) Send(req, rsp imsg.IHeaderPack) error {
 	defer client.delChan(req.GetSessionID())
 
 	client.sendQueue <- req
-	t := time.NewTimer(time.Millisecond * time.Duration(client.timeOut))
+	t := time.NewTimer(client.timeOut)
 	select {
 	case <-t.C:
 		fmt.Println("[Client] Send timeout...")

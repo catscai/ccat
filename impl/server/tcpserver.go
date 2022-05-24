@@ -57,13 +57,7 @@ func (t *TcpService) Start() {
 				continue
 			}
 			// 处理连接读
-			catConn := &Conn{
-				C:        conn,
-				IsValid:  true,
-				ExitChan: make(chan bool, 1),
-				Server:   t,
-				ConnID:   connID,
-			}
+			catConn := NewConnection(conn, connID, t)
 
 			// 将连接加入管理者
 			t.ConnManager.Add(catConn)

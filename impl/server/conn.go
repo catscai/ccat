@@ -20,6 +20,18 @@ type Conn struct {
 
 var ConnErr = errors.New("conn error")
 
+func NewConnection(c net.Conn, connID uint32, ser iface.IServer) *Conn {
+	catConn := &Conn{
+		C:        c,
+		IsValid:  true,
+		ExitChan: make(chan bool, 1),
+		Server:   ser,
+		ConnID:   connID,
+	}
+
+	return catConn
+}
+
 // Start 开始处理连接，接收读消息
 func (c *Conn) Start() {
 	fmt.Println("Conn Start...", "RemoteAddr ", c.C.RemoteAddr())
