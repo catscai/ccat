@@ -3,6 +3,7 @@ tcp_service:
     ip: 127.0.0.1
     port: 2233
     max_conn: 1024
+    auto: true  # 自动创建对象服务监听
     worker_group: # 工作者组配置
       size: 10        # 工作者数量
       queue_length: 10  # 包队列长度

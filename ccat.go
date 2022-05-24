@@ -18,7 +18,9 @@ func init() {
 	if config.AppCfg.IsTcpService {
 		tcpCfg := &config.AppCfg.TcpCfg
 		for name, info := range *tcpCfg {
-			AddServer(NewTcpService(name, "tcp4", info.IP, info.Port))
+			if info.Auto { // 自动创建服务监听
+				AddServer(NewTcpService(name, "tcp4", info.IP, info.Port))
+			}
 		}
 	}
 }
@@ -43,7 +45,7 @@ func NewTcpService(name, ipVer, ip string, port uint32) iface.IServer {
 		Port:     port,
 		ExitChan: make(chan bool, 1),
 		DataPack: &msg.DefaultDataPack{},
-		Dispatcher: &impl.BaseDispatcher{
+		Dispatcher: &impl.DefaultDispatcher{
 			MsgHandlerMap: make(map[interface{}]func(request iface.IRequest, data []byte) error),
 		},
 		HeaderParser: &msg.DefaultHeaderParser{},

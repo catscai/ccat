@@ -49,6 +49,7 @@ func main() {
 		fmt.Println("get service is nil")
 		return
 	}
+
 	service.GetDispatcher().RegisterHandler(uint32(1), &EchoMessage{}, Deal)
 	ccat.Run()
 	// todo 接下来 开发工作任务池

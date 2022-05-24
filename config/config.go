@@ -33,6 +33,7 @@ type TcpServiceCfg struct {
 
 type BaseServiceCfg struct {
 	MaxPackLen uint32 `yaml:"max_pack_len"` // 最大包长度,0-表示不限制
+	Auto       bool   `yaml:"auto"`         // 是否自动创建服务监听
 }
 
 type WorkerGroupCfg struct {
