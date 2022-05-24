@@ -1,4 +1,4 @@
-package impl
+package msg
 
 // BaseMessage 继承消息接口，没有具体实现
 type BaseMessage struct {

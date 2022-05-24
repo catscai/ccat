@@ -1,8 +1,9 @@
 package main
 
 import (
+	"ccat/iface/imsg"
+	"ccat/impl"
 	"ccat/impl/msg"
-	"encoding/binary"
 	"fmt"
 	"net"
 	"time"
@@ -21,48 +22,47 @@ func (em *EchoMessage) Pack() ([]byte, error) {
 	return []byte(em.name), nil
 }
 
+func process(conn net.Conn, pack imsg.IHeaderPack) error {
+	header := pack.(*msg.DefaultHeader)
+
+	fmt.Println("process recv data header", header)
+
+	echo := EchoMessage{}
+	if err := echo.Unpack(header.GetData()); err != nil {
+		fmt.Println("process echo.Unpack err", err)
+		return err
+	}
+	fmt.Println("process recv echo", echo)
+	return nil
+}
+
 func main() {
-	conn, err := net.Dial("tcp4", "127.0.0.1:2233")
+	client := impl.Client{
+		DataPack:     &msg.DefaultDataPack{},
+		HeaderParser: &msg.DefaultHeaderParser{},
+	}
+	err := client.Connection("tcp4", "127.0.0.1:2233", 10, 300)
 	if err != nil {
-		fmt.Println("connection err", err)
+		fmt.Println("Connection failed", err)
 		return
 	}
-	defer conn.Close()
+	client.SetProcess(process)
+	defer client.Close()
 	for {
-		req := EchoMessage{
-			name: "hello caiyanqing",
+		echo := EchoMessage{
+			name: "caiyanqing",
 		}
-		reqData, err := req.Pack()
-		if err != nil {
-			fmt.Println("req pack err", err)
-			break
+		echoData, _ := echo.Pack()
+		header := msg.DefaultHeader{
+			PackType:  1,
+			SessionID: uint64(time.Now().UnixNano()),
+			Data:      echoData,
 		}
-		reqPack := msg.DefaultHeader{
-			PackType: 1,
-			Data:     reqData,
+
+		if err = client.SendASync(&header); err != nil {
+			return
 		}
-		reqPackData, err := reqPack.Pack()
-		if err != nil {
-			fmt.Println("send pack err", err)
-			break
-		}
-		packLen := len(reqPackData)
-		data := make([]byte, 4)
-		binary.LittleEndian.PutUint32(data, uint32(packLen))
-		data = append(data, reqPackData...)
-		_, err = conn.Write(data)
-		if err != nil {
-			fmt.Println("Send data err", err)
-			break
-		}
-		fmt.Printf("sending data:%+v\n", req)
-		//data := make([]byte, 1024)
-		//_, err = conn.Read(data)
-		//if err != nil {
-		//	fmt.Println("Recv data err", err)
-		//	break
-		//}
-		//fmt.Println("Recv data", string(data))
+		fmt.Println("Send data header", header, "time:", time.Now().Unix())
 		time.Sleep(time.Second)
 	}
 }

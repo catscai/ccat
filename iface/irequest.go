@@ -1,6 +1,8 @@
 package iface
 
-import "ccat/iface/imsg"
+import (
+	"ccat/iface/imsg"
+)
 
 // IRequest 表示一个请求， 包含连接信息，和数据包
 type IRequest interface {

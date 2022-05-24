@@ -1,8 +1,7 @@
-package impl
+package msg
 
 import (
 	"ccat/iface/imsg"
-	"ccat/impl/msg"
 	"fmt"
 )
 
@@ -12,7 +11,7 @@ type DefaultHeaderParser struct {
 
 // HeaderUnpack 解包，解出数据包头
 func (p *DefaultHeaderParser) HeaderUnpack(data []byte) (imsg.IHeaderPack, error) {
-	header := msg.DefaultHeader{}
+	header := DefaultHeader{}
 	if err := header.Unpack(data); err != nil {
 		fmt.Println("HeaderUnpack Unpack err", err)
 		return nil, err

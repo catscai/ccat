@@ -1,8 +1,10 @@
-package impl
+package server
 
 import (
 	"ccat/config"
 	"ccat/iface"
+	"ccat/iface/imsg"
+	"ccat/impl"
 	"errors"
 	"fmt"
 	"net"
@@ -46,7 +48,7 @@ func (c *Conn) Start() {
 				fmt.Println("Conn HeaderUnpack err", err)
 				return
 			}
-			r := Request{
+			r := impl.Request{
 				Conn:       c,
 				HeaderPack: header,
 			}
@@ -64,13 +66,27 @@ func (c *Conn) Stop() {
 	close(c.ExitChan)
 }
 
-// SendMsg 发送消息
-func (c *Conn) SendMsg(data []byte) error {
+// SendMsg 发送消息包
+func (c *Conn) SendMsg(pack imsg.IHeaderPack) error {
+	packData, err := pack.Pack()
+	if err != nil {
+		fmt.Println("Conn SendMsg pack.Pack err", err)
+		return err
+	}
+	data, err := c.Server.GetDataPack().ReorganizeData(packData)
+	if err != nil {
+		fmt.Println("Conn SendMsg ReorganizeData err", err)
+		return err
+	}
+	return c.SendData(data)
+}
+
+// SendData 发送raw数据
+func (c *Conn) SendData(data []byte) error {
 	if !c.Valid() {
 		return errors.New("the conn is invalid")
 	}
 	_, err := c.C.Write(data)
-
 	return err
 }
 

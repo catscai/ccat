@@ -1,8 +1,9 @@
-package impl
+package server
 
 import (
 	"ccat/config"
 	"ccat/iface"
+	"ccat/iface/imsg"
 	"fmt"
 	"net"
 )
@@ -13,12 +14,12 @@ type TcpService struct {
 	IPVer        string
 	IP           string
 	Port         uint32
-	DataPack     iface.IDataPack         // 处理tcp粘包
-	Dispatcher   iface.IDispatcher       // 消息分发器
-	HeaderParser iface.IHeaderPackParser // 包头解析器
-	WorkerGroup  iface.IWorkerGroup      // 工作者组
-	ExitChan     chan bool               // 退出管道
-	ConnManager  iface.IConnManager      // 连接管理器
+	DataPack     imsg.IDataPack         // 处理tcp粘包
+	Dispatcher   iface.IDispatcher      // 消息分发器
+	HeaderParser imsg.IHeaderPackParser // 包头解析器
+	WorkerGroup  iface.IWorkerGroup     // 工作者组
+	ExitChan     chan bool              // 退出管道
+	ConnManager  iface.IConnManager     // 连接管理器
 }
 
 // Start 创建tcp监听
@@ -80,7 +81,6 @@ func (t *TcpService) Stop() {
 }
 
 func (t *TcpService) Run() {
-	t.DataPack.Init(t)
 	cfg := config.GetTcpServiceCfg(t.GetName())
 	t.WorkerGroup.Init(t, cfg.WorkerGroup.Size, cfg.WorkerGroup.QueueLength)
 	t.WorkerGroup.Start()
@@ -91,12 +91,12 @@ func (t *TcpService) Run() {
 }
 
 // GetDataPack 获取数据包处理对象
-func (t *TcpService) GetDataPack() iface.IDataPack {
+func (t *TcpService) GetDataPack() imsg.IDataPack {
 	return t.DataPack
 }
 
 // SetDataPack 设置数据包处理对象
-func (t *TcpService) SetDataPack(packDeal iface.IDataPack) {
+func (t *TcpService) SetDataPack(packDeal imsg.IDataPack) {
 	t.DataPack = packDeal
 }
 
@@ -111,12 +111,12 @@ func (t *TcpService) GetDispatcher() iface.IDispatcher {
 }
 
 // SetHeaderParser 设置包头解析器
-func (t *TcpService) SetHeaderParser(parser iface.IHeaderPackParser) {
+func (t *TcpService) SetHeaderParser(parser imsg.IHeaderPackParser) {
 	t.HeaderParser = parser
 }
 
 // GetHeaderParser 获取包头解析器
-func (t *TcpService) GetHeaderParser() iface.IHeaderPackParser {
+func (t *TcpService) GetHeaderParser() imsg.IHeaderPackParser {
 	return t.HeaderParser
 }
 

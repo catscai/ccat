@@ -1,7 +1,6 @@
-package impl
+package msg
 
 import (
-	"ccat/iface"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -36,17 +35,12 @@ func (pack *DefaultDataPack) ParseData(conn net.Conn) ([]byte, error) {
 }
 
 // ReorganizeData 将消息数据重新组织为可发送的data
-func (pack *DefaultDataPack) ReorganizeData(msg iface.IMessage) ([]byte, error) {
-	packData, err := msg.Pack()
-	if err != nil {
-		fmt.Println("ReorganizeData msg Pack err", err)
-		return nil, err
-	}
-	packLen := len(packData)
+func (pack *DefaultDataPack) ReorganizeData(data []byte) ([]byte, error) {
+	packLen := len(data)
 	packLenBytes := make([]byte, defaultHeaderLen)
 	binary.LittleEndian.PutUint32(packLenBytes, uint32(packLen))
 
-	data := append(packLenBytes, packData...)
+	sendData := append(packLenBytes, data...)
 
-	return data, nil
+	return sendData, nil
 }

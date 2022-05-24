@@ -2,6 +2,7 @@ package impl
 
 import (
 	"ccat/iface"
+	"ccat/iface/imsg"
 	"fmt"
 	"reflect"
 )
@@ -22,14 +23,14 @@ func (bd *BaseDispatcher) Dispatch(request iface.IRequest) {
 }
 
 // RegisterHandler 注册消息回调
-func (bd *BaseDispatcher) RegisterHandler(packType interface{}, message iface.IMessage, deal iface.MsgHandlerFunc) {
+func (bd *BaseDispatcher) RegisterHandler(packType interface{}, message imsg.IMessage, deal iface.MsgHandlerFunc) {
 	fmt.Println("RegisterHandler packType", packType)
 	msgType := reflect.TypeOf(message).Elem()
 	msgTypeName := msgType.String()
 	fmt.Println("msgTypeName", msgTypeName)
 	handler := func(conn iface.IConn, data []byte) error {
 		// 利用反射创建新对象
-		req := reflect.New(msgType).Elem().Addr().Interface().(iface.IMessage)
+		req := reflect.New(msgType).Elem().Addr().Interface().(imsg.IMessage)
 		fmt.Println("handler req", req)
 		if err := req.Unpack(data); err != nil {
 			fmt.Println("req Message Unpack err", err, "packName:", msgTypeName)

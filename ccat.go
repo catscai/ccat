@@ -4,6 +4,8 @@ import (
 	"ccat/config"
 	"ccat/iface"
 	"ccat/impl"
+	"ccat/impl/msg"
+	server2 "ccat/impl/server"
 )
 
 // 全局项目app
@@ -34,17 +36,20 @@ func Run() {
 }
 
 func NewTcpService(name, ipVer, ip string, port uint32) iface.IServer {
-	return &impl.TcpService{
+	return &server2.TcpService{
 		Name:     name,
 		IPVer:    ipVer,
 		IP:       ip,
 		Port:     port,
 		ExitChan: make(chan bool, 1),
-		DataPack: &impl.DefaultDataPack{},
+		DataPack: &msg.DefaultDataPack{},
 		Dispatcher: &impl.BaseDispatcher{
 			MsgHandlerMap: make(map[interface{}]func(conn iface.IConn, data []byte) error),
 		},
-		HeaderParser: &impl.DefaultHeaderParser{},
+		HeaderParser: &msg.DefaultHeaderParser{},
 		WorkerGroup:  &impl.WorkerGroup{},
+		ConnManager: &server2.ConnManager{
+			ConnMap: make(map[uint32]iface.IConn),
+		},
 	}
 }

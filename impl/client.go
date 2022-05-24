@@ -1,7 +1,6 @@
 package impl
 
 import (
-	"ccat/iface"
 	"ccat/iface/imsg"
 	"errors"
 	"fmt"
@@ -12,8 +11,8 @@ import (
 
 type Client struct {
 	Conn           net.Conn
-	DataPack       iface.IDataPack
-	HeaderParser   iface.IHeaderPackParser
+	DataPack       imsg.IDataPack
+	HeaderParser   imsg.IHeaderPackParser
 	process        func(conn net.Conn, header imsg.IHeaderPack) error
 	isValid        bool
 	exitChan       chan bool
@@ -34,6 +33,8 @@ func (client *Client) Connection(ipVer, address string, chanLen, timeout uint32)
 	client.Conn = conn
 	client.isValid = true
 	client.sendQueue = make(chan imsg.IHeaderPack, chanLen)
+	client.exitChan = make(chan bool, 1)
+	client.sessionChanMap = make(map[interface{}]chan []byte)
 	client.timeOut = timeout
 
 	// 连接成功,创建读写协程
@@ -48,12 +49,12 @@ func (client *Client) SetProcess(process func(conn net.Conn, header imsg.IHeader
 }
 
 // SetDataPack 设置处理粘包，分包
-func (client *Client) SetDataPack(pack iface.IDataPack) {
+func (client *Client) SetDataPack(pack imsg.IDataPack) {
 	client.DataPack = pack
 }
 
 // SetHeaderParser 设置包头解析
-func (client *Client) SetHeaderParser(parser iface.IHeaderPackParser) {
+func (client *Client) SetHeaderParser(parser imsg.IHeaderPackParser) {
 	client.HeaderParser = parser
 }
 
@@ -83,8 +84,12 @@ func (client *Client) Send(req, rsp imsg.IHeaderPack) error {
 
 // SendASync 异步发送
 func (client *Client) SendASync(req imsg.IHeaderPack) error {
-	client.sendQueue <- req
-	return nil
+	if client.Valid() {
+		client.sendQueue <- req
+		return nil
+	}
+
+	return errors.New("client is invalid")
 }
 
 // Valid 连接是否有效
@@ -134,7 +139,7 @@ func (client *Client) beginWrite() {
 			return
 		case header := <-client.sendQueue:
 			// 发送队列已经是用户封装好的header了，所以不需要再次封装包头
-			// client.HeaderParser.HeaderPack(req.GetPackType(),req.GetData())
+			// client.HeaderParser.HeaderPack(packType,header.GetData())
 			data, err := header.Pack()
 			if err != nil {
 				fmt.Println("[Client] beginWrite  header.Pack err", err, "header", header)
@@ -145,7 +150,7 @@ func (client *Client) beginWrite() {
 				fmt.Println("[Client] beginWrite DataPack.ReorganizeData err", err)
 				continue
 			}
-			// todo 确认知识点 golang默认阻塞写？ 若是阻塞写则一定是全部发送的，不需要关心发送了多小
+			// todo 确认知识点 golang默认阻塞写？已确认阻塞 若是阻塞写则一定是全部发送的，不需要关心发送了多少
 			if _, err = client.Conn.Write(sendData); err != nil {
 				fmt.Println("[Client] beginWrite Conn.Write err", err)
 				return
