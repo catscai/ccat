@@ -1,43 +1,32 @@
 package impl
 
 import (
-	"ccat/config"
 	"ccat/iface"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"io"
+	"net"
 )
 
 type DefaultDataPack struct {
-	Server iface.IServer
 }
 
 var defaultHeaderLen = 4 // 默认头长度4个字节，表示包的长度
 
-// Init 初始化，设置所属server
-func (pack *DefaultDataPack) Init(server iface.IServer) {
-	pack.Server = server
-}
-
 // ParseData 从连接中解析出包长度和数据
-func (pack *DefaultDataPack) ParseData(conn iface.IConn) ([]byte, error) {
+func (pack *DefaultDataPack) ParseData(conn net.Conn) ([]byte, error) {
 	packLenBytes := make([]byte, defaultHeaderLen)
-	if _, err := io.ReadFull(conn.GetConn(), packLenBytes); err != nil {
+	if _, err := io.ReadFull(conn, packLenBytes); err != nil {
 		fmt.Println("ParseData ReadFull err", err)
 		return nil, err
 	}
 	// 解析出包长度
 	packLen := binary.LittleEndian.Uint32(packLenBytes)
-	cfg := config.GetBaseServiceCfg(pack.Server.GetName())
-	if cfg.MaxPackLen > 0 && packLen > cfg.MaxPackLen {
-		fmt.Println("ParseData Recv packlen over max pack length limit, packLen", packLen)
-		return nil, errors.New("packet length over max limit")
-	}
+
 	var data []byte
 	if packLen > 0 {
 		data = make([]byte, packLen)
-		if _, err := io.ReadFull(conn.GetConn(), data); err != nil {
+		if _, err := io.ReadFull(conn, data); err != nil {
 			fmt.Println("ParseData ReadFull err", err)
 			return nil, err
 		}

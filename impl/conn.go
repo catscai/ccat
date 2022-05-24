@@ -1,6 +1,7 @@
 package impl
 
 import (
+	"ccat/config"
 	"ccat/iface"
 	"errors"
 	"fmt"
@@ -28,9 +29,14 @@ func (c *Conn) Start() {
 			break
 		default:
 			// 处理tcp粘包
-			data, err := c.Server.GetDataPack().ParseData(c)
+			data, err := c.Server.GetDataPack().ParseData(c.C)
 			if err != nil {
 				fmt.Println("Conn Start ParseData err", err)
+				return
+			}
+			cfg := config.GetBaseServiceCfg(c.Server.GetName())
+			if cfg.MaxPackLen > 0 && uint32(len(data)) > cfg.MaxPackLen {
+				fmt.Println("ParseData Recv packlen over max pack length limit, packLen", uint32(len(data)))
 				return
 			}
 			//fmt.Println("Receive data", string(data))

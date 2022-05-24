@@ -18,7 +18,7 @@ type TcpService struct {
 	HeaderParser iface.IHeaderPackParser // 包头解析器
 	WorkerGroup  iface.IWorkerGroup      // 工作者组
 	ExitChan     chan bool               // 退出管道
-	ConnManager  iface.IConnManager
+	ConnManager  iface.IConnManager      // 连接管理器
 }
 
 // Start 创建tcp监听
