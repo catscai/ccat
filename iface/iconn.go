@@ -14,4 +14,8 @@ type IConn interface {
 
 	GetConn() net.Conn // 获取go连接
 	GetConnID() uint32 // 获取连接ID
+
+	SetProperty(key string, val interface{}) // 给在连接上设置属性
+	GetProperty(key string) interface{}      // 获取属性
+	RemoveProperty(key string)               // 删除属性
 }

@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"sync"
 )
 
 type Conn struct {
@@ -18,16 +19,20 @@ type Conn struct {
 	ctx     context.Context // 用来处理关闭
 	cancel  context.CancelFunc
 	Server  iface.IServer // 所属服务
+
+	propertyMap   map[string]interface{} // 属性map
+	propertyMutex sync.RWMutex           // 属性操作锁
 }
 
 var ConnErr = errors.New("conn error")
 
 func NewConnection(c net.Conn, connID uint32, ser iface.IServer) *Conn {
 	catConn := &Conn{
-		C:       c,
-		IsValid: true,
-		Server:  ser,
-		ConnID:  connID,
+		C:           c,
+		IsValid:     true,
+		Server:      ser,
+		ConnID:      connID,
+		propertyMap: nil,
 	}
 
 	return catConn
@@ -75,6 +80,9 @@ func (c *Conn) Start() {
 	c.ctx, c.cancel = context.WithCancel(context.Background())
 
 	go c.StartReader()
+
+	// 调用连接开始时的回调
+	c.Server.CallConnectStart(c)
 
 	select {
 	case <-c.ctx.Done():
@@ -132,4 +140,39 @@ func (c *Conn) release() {
 	c.C.Close()
 	// 从连接管理器中删除
 	c.Server.GetConnManager().Remove(c)
+
+	// 调用连接退出时回调
+	c.Server.CallConnectEnd(c)
+}
+
+// SetProperty 给在连接上设置属性
+func (c *Conn) SetProperty(key string, val interface{}) {
+	c.propertyMutex.Lock()
+	defer c.propertyMutex.Unlock()
+	if c.propertyMap == nil {
+		c.propertyMap = make(map[string]interface{})
+	}
+	c.propertyMap[key] = val
+}
+
+// GetProperty 获取属性
+func (c *Conn) GetProperty(key string) interface{} {
+	c.propertyMutex.RLock()
+	defer c.propertyMutex.RUnlock()
+	if c.propertyMap == nil {
+		return nil
+	}
+	if val, ok := c.propertyMap[key]; ok {
+		return val
+	}
+	return nil
+}
+
+// RemoveProperty 删除属性
+func (c *Conn) RemoveProperty(key string) {
+	c.propertyMutex.Lock()
+	defer c.propertyMutex.Unlock()
+	if c.propertyMap != nil {
+		delete(c.propertyMap, key)
+	}
 }

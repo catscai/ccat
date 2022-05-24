@@ -10,16 +10,18 @@ import (
 
 // TcpService tcp 服务
 type TcpService struct {
-	Name         string
-	IPVer        string
-	IP           string
-	Port         uint32
-	DataPack     imsg.IDataPack         // 处理tcp粘包
-	Dispatcher   iface.IDispatcher      // 消息分发器
-	HeaderParser imsg.IHeaderPackParser // 包头解析器
-	WorkerGroup  iface.IWorkerGroup     // 工作者组
-	ExitChan     chan bool              // 退出管道
-	ConnManager  iface.IConnManager     // 连接管理器
+	Name             string
+	IPVer            string
+	IP               string
+	Port             uint32
+	DataPack         imsg.IDataPack          // 处理tcp粘包
+	Dispatcher       iface.IDispatcher       // 消息分发器
+	HeaderParser     imsg.IHeaderPackParser  // 包头解析器
+	WorkerGroup      iface.IWorkerGroup      // 工作者组
+	ExitChan         chan bool               // 退出管道
+	ConnManager      iface.IConnManager      // 连接管理器
+	ConnStartHandler iface.ConnStatusHandler // 连接建立成功后的回调
+	ConnEndHandler   iface.ConnStatusHandler // 连接关闭后的回调
 }
 
 // Start 创建tcp监听
@@ -122,6 +124,30 @@ func (t *TcpService) GetWorkerGroup() iface.IWorkerGroup {
 // GetConnManager 获取连接管理器
 func (t *TcpService) GetConnManager() iface.IConnManager {
 	return t.ConnManager
+}
+
+// SetConnectStartHandler 设置连接建立成功后的回调
+func (t *TcpService) SetConnectStartHandler(handler iface.ConnStatusHandler) {
+	t.ConnStartHandler = handler
+}
+
+// SetConnectEndHandler 设置连接关闭时的回调
+func (t *TcpService) SetConnectEndHandler(handler iface.ConnStatusHandler) {
+	t.ConnEndHandler = handler
+}
+
+// CallConnectStart 调用连接开始回调
+func (t *TcpService) CallConnectStart(conn iface.IConn) {
+	if t.ConnStartHandler != nil {
+		t.ConnStartHandler(t, conn)
+	}
+}
+
+// CallConnectEnd 调用连接退出回调
+func (t *TcpService) CallConnectEnd(conn iface.IConn) {
+	if t.ConnEndHandler != nil {
+		t.ConnEndHandler(t, conn)
+	}
 }
 
 // GetAddr 获取服务监听地址

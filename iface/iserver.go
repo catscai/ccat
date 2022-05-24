@@ -23,6 +23,13 @@ type IServer interface {
 
 	GetConnManager() IConnManager // 获取连接管理器
 
+	SetConnectStartHandler(ConnStatusHandler) // 设置连接建立成功后的回调
+	SetConnectEndHandler(ConnStatusHandler)   // 设置连接关闭时的回调
+	CallConnectStart(conn IConn)              // 调用连接开始回调
+	CallConnectEnd(conn IConn)                // 调用连接退出回调
+
 	GetAddr() string // 获取服务监听地址
 	GetName() string // 获取服务名
 }
+
+type ConnStatusHandler func(server IServer, conn IConn) error
