@@ -60,7 +60,9 @@ func (c *Conn) StartReader() {
 			}
 			//fmt.Println("Receive data", string(data))
 			// 解析出包头
-			header, err := c.Server.GetHeaderParser().HeaderUnpack(data)
+			//header, err := c.Server.GetHeaderParser().HeaderUnpack(data)
+			header := c.Server.GetHeaderOperator().Get()
+			err = header.Unpack(data)
 			if err != nil {
 				fmt.Println("Conn HeaderUnpack err", err)
 				return

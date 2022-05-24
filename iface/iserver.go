@@ -16,9 +16,6 @@ type IServer interface {
 	SetDispatcher(dispatcher IDispatcher) // 设置消息分发器
 	GetDispatcher() IDispatcher           // 获取消息分发器
 
-	SetHeaderParser(parser imsg.IHeaderPackParser) // 设置包头解析器
-	GetHeaderParser() imsg.IHeaderPackParser       // 获取包头解析器
-
 	GetWorkerGroup() IWorkerGroup // 获取工作者组
 
 	GetConnManager() IConnManager // 获取连接管理器
@@ -27,6 +24,9 @@ type IServer interface {
 	SetConnectEndHandler(ConnStatusHandler)   // 设置连接关闭时的回调
 	CallConnectStart(conn IConn)              // 调用连接开始回调
 	CallConnectEnd(conn IConn)                // 调用连接退出回调
+
+	SetHeaderOperator(operator imsg.IHeaderOperator) // 设置包头操作对象
+	GetHeaderOperator() imsg.IHeaderOperator         // 获取包头操作对象
 
 	GetAddr() string // 获取服务监听地址
 	GetName() string // 获取服务名

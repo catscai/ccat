@@ -16,12 +16,12 @@ type TcpService struct {
 	Port             uint32
 	DataPack         imsg.IDataPack          // 处理tcp粘包
 	Dispatcher       iface.IDispatcher       // 消息分发器
-	HeaderParser     imsg.IHeaderPackParser  // 包头解析器
 	WorkerGroup      iface.IWorkerGroup      // 工作者组
 	ExitChan         chan bool               // 退出管道
 	ConnManager      iface.IConnManager      // 连接管理器
 	ConnStartHandler iface.ConnStatusHandler // 连接建立成功后的回调
 	ConnEndHandler   iface.ConnStatusHandler // 连接关闭后的回调
+	HeaderOperator   imsg.IHeaderOperator    // 包头操作者
 }
 
 // Start 创建tcp监听
@@ -106,16 +106,6 @@ func (t *TcpService) GetDispatcher() iface.IDispatcher {
 	return t.Dispatcher
 }
 
-// SetHeaderParser 设置包头解析器
-func (t *TcpService) SetHeaderParser(parser imsg.IHeaderPackParser) {
-	t.HeaderParser = parser
-}
-
-// GetHeaderParser 获取包头解析器
-func (t *TcpService) GetHeaderParser() imsg.IHeaderPackParser {
-	return t.HeaderParser
-}
-
 // GetWorkerGroup 获取工作者组
 func (t *TcpService) GetWorkerGroup() iface.IWorkerGroup {
 	return t.WorkerGroup
@@ -148,6 +138,16 @@ func (t *TcpService) CallConnectEnd(conn iface.IConn) {
 	if t.ConnEndHandler != nil {
 		t.ConnEndHandler(t, conn)
 	}
+}
+
+// SetHeaderOperator 设置包头操作对象
+func (t *TcpService) SetHeaderOperator(operator imsg.IHeaderOperator) {
+	t.HeaderOperator = operator
+}
+
+// GetHeaderOperator 获取包头操作对象
+func (t *TcpService) GetHeaderOperator() imsg.IHeaderOperator {
+	return t.HeaderOperator
 }
 
 // GetAddr 获取服务监听地址

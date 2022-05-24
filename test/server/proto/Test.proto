@@ -1,1 +1,17 @@
-snatx
+syntax = "proto2";
+
+package proto;
+//option go_package = "./proto;proto";
+
+message TestRQ {
+  optional uint64 uid = 1;
+  optional string name = 2;
+  optional uint32 age = 3;
+}
+
+message TestRS {
+  optional uint64 uid = 1;
+  optional string name = 2;
+  optional uint32 age = 3;
+  optional string reply = 4;
+}

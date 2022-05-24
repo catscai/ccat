@@ -13,7 +13,7 @@ import (
 type Client struct {
 	Conn           net.Conn
 	DataPack       imsg.IDataPack
-	HeaderParser   imsg.IHeaderPackParser
+	HeaderOperator imsg.IHeaderOperator
 	process        func(conn net.Conn, header imsg.IHeaderPack) error
 	isValid        bool
 	sendQueue      chan imsg.IHeaderPack
@@ -24,10 +24,10 @@ type Client struct {
 	cancel         context.CancelFunc
 }
 
-func NewClient(dataPack imsg.IDataPack, headerParser imsg.IHeaderPackParser, sendChanLen uint32, sendTimeOut time.Duration) *Client {
+func NewClient(dataPack imsg.IDataPack, headerOperator imsg.IHeaderOperator, sendChanLen uint32, sendTimeOut time.Duration) *Client {
 	client := &Client{
 		DataPack:       dataPack,
-		HeaderParser:   headerParser,
+		HeaderOperator: headerOperator,
 		sendQueue:      make(chan imsg.IHeaderPack, sendChanLen),
 		sessionChanMap: make(map[interface{}]chan []byte),
 		isValid:        false,
@@ -66,9 +66,9 @@ func (client *Client) SetDataPack(pack imsg.IDataPack) {
 	client.DataPack = pack
 }
 
-// SetHeaderParser 设置包头解析
-func (client *Client) SetHeaderParser(parser imsg.IHeaderPackParser) {
-	client.HeaderParser = parser
+// SetHeaderOperator 设置包头解析
+func (client *Client) SetHeaderOperator(operator imsg.IHeaderOperator) {
+	client.HeaderOperator = operator
 }
 
 // Send 同步发送，等待请求回复;如果设置了process,那么收到消息后既会调用process回调，也会在Send接口返回
@@ -124,8 +124,8 @@ func (client *Client) beginRead() {
 				fmt.Println("[Client] DataPack.ParseData err", err)
 				return
 			}
-			header, err := client.HeaderParser.HeaderUnpack(data)
-			if err != nil {
+			header := client.HeaderOperator.Get()
+			if err = header.Unpack(data); err != nil {
 				fmt.Println("[Client] HeaderParser.HeaderUnpack err", err)
 				return
 			}

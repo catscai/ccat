@@ -38,20 +38,23 @@ func Run() {
 }
 
 func NewTcpService(name, ipVer, ip string, port uint32) iface.IServer {
-	return &server2.TcpService{
-		Name:     name,
-		IPVer:    ipVer,
-		IP:       ip,
-		Port:     port,
-		ExitChan: make(chan bool, 1),
-		DataPack: &msg.DefaultDataPack{},
-		Dispatcher: &impl.DefaultDispatcher{
-			MsgHandlerMap: make(map[interface{}]func(request iface.IRequest, data []byte) error),
-		},
-		HeaderParser: &msg.DefaultHeaderParser{},
-		WorkerGroup:  &impl.WorkerGroup{},
+	ser := &server2.TcpService{
+		Name:        name,
+		IPVer:       ipVer,
+		IP:          ip,
+		Port:        port,
+		ExitChan:    make(chan bool, 1),
+		DataPack:    &msg.DefaultDataPack{},
+		WorkerGroup: &impl.WorkerGroup{},
 		ConnManager: &server2.ConnManager{
 			ConnMap: make(map[uint32]iface.IConn),
 		},
+		HeaderOperator: &msg.DefaultHeaderOperator{},
 	}
+	dispatcher := &impl.DefaultDispatcher{
+		MsgHandlerMap: make(map[interface{}]func(request iface.IRequest, data []byte) error),
+		Server:        ser,
+	}
+	ser.SetDispatcher(dispatcher)
+	return ser
 }

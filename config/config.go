@@ -23,7 +23,9 @@ type GlobalCfg struct {
 var AppCfg *GlobalCfg
 
 type TcpServiceCfg struct {
-	BaseServiceCfg
+	Base        *BaseServiceCfg
+	MaxPackLen  uint32 `yaml:"max_pack_len"` // 最大包长度,0-表示不限制
+	Auto        bool   `yaml:"auto"`         // 是否自动创建服务监听
 	Name        string
 	IP          string          `yaml:"ip"`
 	Port        uint32          `yaml:"port"`
@@ -62,6 +64,10 @@ func Reload() error {
 				QueueLength: 10,
 			}
 		}
+		cfg.TcpCfg[name].Base = &BaseServiceCfg{
+			MaxPackLen: cfg.TcpCfg[name].MaxPackLen,
+			Auto:       cfg.TcpCfg[name].Auto,
+		}
 		fmt.Printf("[Config] Tcp info %+v\n", *cfg.TcpCfg[name])
 	}
 	if len(cfg.TcpCfg) > 0 {
@@ -82,7 +88,7 @@ func GetTcpServiceCfg(name string) *TcpServiceCfg {
 
 func GetBaseServiceCfg(name string) *BaseServiceCfg {
 	if cfg, ok := AppCfg.TcpCfg[name]; ok {
-		return &cfg.BaseServiceCfg
+		return cfg.Base
 	}
 
 	return nil

@@ -3,7 +3,6 @@ package impl
 import (
 	"ccat/iface"
 	"ccat/iface/imsg"
-	"ccat/impl/msg"
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"reflect"
@@ -12,6 +11,7 @@ import (
 // DefaultDispatcher 保存包与回调业务映射关系，业务分发
 type DefaultDispatcher struct {
 	MsgHandlerMap map[interface{}]func(request iface.IRequest, data []byte) error
+	Server        iface.IServer
 }
 
 // Dispatch 将消息分发给处理函数
@@ -72,12 +72,8 @@ func (bd *DefaultDispatcher) RegisterHandlerSimple(reqType, rspType interface{},
 				fmt.Println("[DefaultDispatcher] rsp.Pack err", err)
 				return
 			}
-			pkg := msg.DefaultHeader{
-				PackType:  rspType.(uint32),
-				SessionID: request.GetHeaderPack().GetSessionID().(uint64),
-				Data:      rspData,
-			}
-			if err := request.GetConn().SendMsg(&pkg); err != nil {
+			pkg := bd.Server.GetHeaderOperator().Full(rspType, rspData, request.GetHeaderPack())
+			if err := request.GetConn().SendMsg(pkg); err != nil {
 				fmt.Println("SendMsg err", err)
 			}
 		}()
@@ -129,12 +125,8 @@ func (bd *DefaultDispatcher) RegisterHandlerSimplePB(reqType, rspType interface{
 				fmt.Println("[DefaultDispatcher] proto.Marshal err", err)
 				return
 			}
-			pkg := msg.DefaultHeader{
-				PackType:  rspType.(uint32),
-				SessionID: request.GetHeaderPack().GetSessionID().(uint64),
-				Data:      rspData,
-			}
-			if err = request.GetConn().SendMsg(&pkg); err != nil {
+			pkg := bd.Server.GetHeaderOperator().Full(rspType, rspData, request.GetHeaderPack())
+			if err = request.GetConn().SendMsg(pkg); err != nil {
 				fmt.Println("[DefaultDispatcher] SendMsg err", err)
 			}
 		}()
