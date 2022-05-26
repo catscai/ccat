@@ -25,7 +25,7 @@ func (em *EchoMessage) Pack() ([]byte, error) {
 	return []byte(em.name), nil
 }
 
-func Deal(request iface.IRequest, message imsg.IMessage) error {
+func Deal(ctx *iface.CatContext, request iface.IRequest, message imsg.IMessage) error {
 	fmt.Println("deal recv message start")
 	defer fmt.Println("deal recv message end")
 	req := message.(*EchoMessage)
@@ -46,7 +46,7 @@ func Deal(request iface.IRequest, message imsg.IMessage) error {
 	return nil
 }
 
-func DealSimpleMessage(reqMsg, rspMsg imsg.IMessage) error {
+func DealSimpleMessage(ctx *iface.CatContext, reqMsg, rspMsg imsg.IMessage) error {
 	req := reqMsg.(*EchoMessage)
 	rsp := rspMsg.(*EchoMessage)
 	fmt.Println("DealSimpleMessage recv req", *req)
@@ -70,6 +70,17 @@ func DealSimplePB(ctx *iface.CatContext, reqMsg, rspMsg proto.Message) error {
 	return nil
 }
 
+const (
+	TestPackType1RQ uint32 = 1
+	TestPackType1RS uint32 = 2
+
+	TestPackType2RQ uint32 = 3
+	TestPackType2RS uint32 = 4
+
+	TestPackType3RQ uint32 = 5
+	TestPackType4RS uint32 = 6
+)
+
 func main() {
 	service := ccat.GetServer("tcp_test")
 	if service == nil {
@@ -77,9 +88,8 @@ func main() {
 		return
 	}
 
-	//service.GetDispatcher().RegisterHandler(uint32(1), &EchoMessage{}, Deal)
-	//service.GetDispatcher().RegisterHandlerSimple(uint32(1), uint32(2), &EchoMessage{}, &EchoMessage{}, DealSimpleMessage)
-	service.GetDispatcher().RegisterHandlerSimplePB(uint32(1), uint32(2), &test.TestRQ{}, &test.TestRS{}, DealSimplePB)
+	service.GetDispatcher().RegisterHandler(TestPackType1RQ, &EchoMessage{}, Deal)
+	service.GetDispatcher().RegisterHandlerSimple(TestPackType2RQ, TestPackType2RS, &EchoMessage{}, &EchoMessage{}, DealSimpleMessage)
+	service.GetDispatcher().RegisterHandlerSimplePB(TestPackType3RQ, TestPackType4RS, &test.TestRQ{}, &test.TestRS{}, DealSimplePB)
 	ccat.Run()
-	// todo 接下来 开发工作任务池
 }
