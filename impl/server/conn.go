@@ -1,18 +1,19 @@
 package server
 
 import (
+	"ccat/clog"
 	"ccat/config"
 	"ccat/iface"
 	"ccat/iface/imsg"
-	"ccat/impl"
 	"context"
 	"errors"
-	"fmt"
+	"go.uber.org/zap"
 	"net"
 	"sync"
 )
 
 type Conn struct {
+	clog.ICatLog
 	C       net.Conn        // go连接对象
 	ConnID  uint32          // 连接id
 	IsValid bool            // 该连接是否有效，是否关闭
@@ -28,6 +29,7 @@ var ConnErr = errors.New("conn error")
 
 func NewConnection(c net.Conn, connID uint32, ser iface.IServer) *Conn {
 	catConn := &Conn{
+		ICatLog:     clog.AppLogger().Clone(),
 		C:           c,
 		IsValid:     true,
 		Server:      ser,
@@ -39,7 +41,7 @@ func NewConnection(c net.Conn, connID uint32, ser iface.IServer) *Conn {
 }
 
 func (c *Conn) StartReader() {
-	fmt.Println("Conn Start...", "RemoteAddr ", c.C.RemoteAddr())
+	c.Info("Conn Start...", zap.Any("RemoteAddr ", c.C.RemoteAddr()))
 	defer c.Stop()
 	// 接收连接消息
 	for {
@@ -50,12 +52,12 @@ func (c *Conn) StartReader() {
 			// 处理tcp粘包
 			data, err := c.Server.GetDataPack().ParseData(c.C)
 			if err != nil {
-				fmt.Println("Conn Start ParseData err", err)
+				c.Error("Conn Start ParseData failed", zap.Any("err", err))
 				return
 			}
 			cfg := config.GetBaseServiceCfg(c.Server.GetName())
 			if cfg.MaxPackLen > 0 && uint32(len(data)) > cfg.MaxPackLen {
-				fmt.Println("ParseData Recv packlen over max pack length limit, packLen", uint32(len(data)))
+				c.Warn("ParseData Recv packlen over max pack length limit", zap.Int("packLen", len(data)))
 				return
 			}
 			//fmt.Println("Receive data", string(data))
@@ -64,10 +66,10 @@ func (c *Conn) StartReader() {
 			header := c.Server.GetHeaderOperator().Get()
 			err = header.Unpack(data)
 			if err != nil {
-				fmt.Println("Conn HeaderUnpack err", err)
+				c.Error("Conn HeaderUnpack failed", zap.Any("err", err))
 				return
 			}
-			r := impl.Request{
+			r := Request{
 				Conn:       c,
 				HeaderPack: header,
 			}
@@ -102,12 +104,12 @@ func (c *Conn) Stop() {
 func (c *Conn) SendMsg(pack imsg.IHeaderPack) error {
 	packData, err := pack.Pack()
 	if err != nil {
-		fmt.Println("Conn SendMsg pack.Pack err", err)
+		c.Error("Conn SendMsg pack.Pack failed", zap.Any("err", err))
 		return err
 	}
 	data, err := c.Server.GetDataPack().ReorganizeData(packData)
 	if err != nil {
-		fmt.Println("Conn SendMsg ReorganizeData err", err)
+		c.Error("Conn SendMsg ReorganizeData failed", zap.Any("err", err))
 		return err
 	}
 	return c.SendData(data)
@@ -137,7 +139,7 @@ func (c *Conn) GetConnID() uint32 {
 
 // 释放资源
 func (c *Conn) release() {
-	fmt.Println("Conn release RemoteAddr ", c.C.RemoteAddr())
+	c.Info("Conn release RemoteAddr ", zap.Any("remoteAddr", c.C.RemoteAddr()))
 	c.IsValid = false
 	c.C.Close()
 	// 从连接管理器中删除

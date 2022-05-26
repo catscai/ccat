@@ -1,8 +1,10 @@
 package impl
 
 import (
+	"ccat/clog"
 	"ccat/iface"
 	"fmt"
+	"go.uber.org/zap"
 	"time"
 )
 
@@ -11,13 +13,15 @@ type WorkerGroup struct {
 	ExitChan     chan bool                    // 退出消息管道
 	Server       iface.IServer                // 所属server
 	ShardFunc    iface.ShardWorkerHandlerFunc // 用户可自定义，根据请求选择工作者处理
+	logger       clog.ICatLog                 // 日志对象
 }
 
 // Init 初始化工作者组参数
-func (wg *WorkerGroup) Init(server iface.IServer, size uint32, queueLen uint32) {
+func (wg *WorkerGroup) Init(logger clog.ICatLog, server iface.IServer, size uint32, queueLen uint32) {
 	wg.Server = server
 	wg.ExitChan = make(chan bool, 1)
 	wg.WorkerQueues = make([]chan iface.IRequest, size)
+	wg.logger = logger
 	for i := 0; i < int(size); i++ {
 		wg.WorkerQueues[i] = make(chan iface.IRequest, queueLen)
 	}
@@ -38,7 +42,6 @@ func (wg *WorkerGroup) Stop() {
 
 // SendTask 添加处理请求任务
 func (wg *WorkerGroup) SendTask(request iface.IRequest) {
-	fmt.Printf("[WorkerGroup] SendTask start msgType:%v\n", request.GetHeaderPack().GetPackType())
 	// 根据请求获取对应的worker id
 	var id uint32
 	if wg.ShardFunc == nil {
@@ -47,7 +50,7 @@ func (wg *WorkerGroup) SendTask(request iface.IRequest) {
 		id = wg.ShardFunc(wg, request)
 	}
 	if id >= wg.GetWorkerSize() {
-		fmt.Println("[WorkerGroup] SendTask select worker id over max length")
+		wg.logger.Error("[WorkerGroup] SendTask select worker id over max length", zap.Uint32("id", id))
 		return
 	}
 	wg.WorkerQueues[id] <- request

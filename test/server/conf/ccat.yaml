@@ -7,3 +7,13 @@ tcp_service:
     worker_group: # 工作者组配置
       size: 10        # 工作者数量
       queue_length: 10  # 包队列长度
+
+log:
+  app_name: test-svr
+  log_dir: ./logs/  # 默认./logs/
+  level: debug      # 日志等级fatal/panic/dPanic/error/warn/info/debug
+  max_size: 128     # 单个日志文件最大M
+  max_age: 7        # 日志文本保存时间
+  #max_backups: 30   # 项目日志最大副本数
+  #func: false      # 是否打印函数名,默认false
+  console: true    # 控制台是否打印,默认false

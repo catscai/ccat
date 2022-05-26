@@ -1,8 +1,9 @@
 package main
 
 import (
+	"ccat/clog"
 	"ccat/iface/imsg"
-	"ccat/impl"
+	"ccat/impl/client"
 	"ccat/impl/msg"
 	"ccat/test"
 	"fmt"
@@ -38,8 +39,15 @@ func process(conn net.Conn, pack imsg.IHeaderPack) error {
 	return nil
 }
 
+var Logger clog.ICatLog
+
+func init() {
+	Logger = clog.NewZapLogger("debug", "test-client",
+		"./logs/", 128, 7, 30, false, false)
+}
+
 func main() {
-	client := impl.NewClient(&msg.DefaultDataPack{}, &msg.DefaultHeaderOperator{}, 10, time.Millisecond*300)
+	client := client.NewClient(Logger, &msg.DefaultDataPack{}, &msg.DefaultHeaderOperator{}, 10, time.Millisecond*300)
 
 	err := client.Connection("tcp4", "127.0.0.1:2233", time.Second)
 	if err != nil {

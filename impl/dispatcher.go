@@ -3,6 +3,7 @@ package impl
 import (
 	"ccat/iface"
 	"ccat/iface/imsg"
+	"context"
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"reflect"
@@ -10,15 +11,15 @@ import (
 
 // DefaultDispatcher 保存包与回调业务映射关系，业务分发
 type DefaultDispatcher struct {
-	MsgHandlerMap map[interface{}]func(request iface.IRequest, data []byte) error
+	MsgHandlerMap map[interface{}]func(ctx *iface.CatContext, request iface.IRequest, data []byte) error
 	Server        iface.IServer
 }
 
 // Dispatch 将消息分发给处理函数
 func (bd *DefaultDispatcher) Dispatch(request iface.IRequest) {
-	fmt.Println("Start Dispatch message")
 	if f, ok := bd.MsgHandlerMap[request.GetHeaderPack().GetPackType()]; ok {
-		f(request, request.GetHeaderPack().GetData())
+		f(iface.NewCatContext(context.TODO(), request.GetConn()), request,
+			request.GetHeaderPack().GetData())
 	} else {
 		fmt.Println("Not found message handler, packType", request.GetHeaderPack().GetPackType())
 	}
@@ -30,7 +31,7 @@ func (bd *DefaultDispatcher) RegisterHandler(packType interface{}, message imsg.
 	msgType := reflect.TypeOf(message).Elem()
 	msgTypeName := msgType.String()
 	fmt.Println("msgTypeName", msgTypeName)
-	handler := func(request iface.IRequest, data []byte) error {
+	handler := func(ctx *iface.CatContext, request iface.IRequest, data []byte) error {
 		// 利用反射创建新对象
 		req := reflect.New(msgType).Elem().Addr().Interface().(imsg.IMessage)
 		fmt.Println("handler req", req)
@@ -42,7 +43,7 @@ func (bd *DefaultDispatcher) RegisterHandler(packType interface{}, message imsg.
 		// todo 加一个recover panic 捕捉业务处理时(deal执行时)的异常情况
 		defer RecoverPanic()
 		// 调用业务回调
-		if err := deal(request, req); err != nil {
+		if err := deal(ctx, request, req); err != nil {
 			fmt.Println("Business Deal err", err)
 			return err
 		}
@@ -57,7 +58,7 @@ func (bd *DefaultDispatcher) RegisterHandlerSimple(reqType, rspType interface{},
 	reqMsgType := reflect.TypeOf(reqMsg).Elem()
 	rspMsgType := reflect.TypeOf(rspMsg).Elem()
 
-	handler := func(request iface.IRequest, data []byte) error {
+	handler := func(ctx *iface.CatContext, request iface.IRequest, data []byte) error {
 		req := reflect.New(reqMsgType).Elem().Addr().Interface().(imsg.IMessage)
 		rsp := reflect.New(rspMsgType).Elem().Addr().Interface().(imsg.IMessage)
 		if err := req.Unpack(data); err != nil {
@@ -78,7 +79,7 @@ func (bd *DefaultDispatcher) RegisterHandlerSimple(reqType, rspType interface{},
 			}
 		}()
 		// 调用业务回调
-		if err := deal(req, rsp); err != nil {
+		if err := deal(ctx, req, rsp); err != nil {
 			fmt.Println("Business Deal err", err)
 		}
 
@@ -90,7 +91,7 @@ func (bd *DefaultDispatcher) RegisterHandlerSimple(reqType, rspType interface{},
 // RegisterHandlerPB 用户自己控制发送 pb
 func (bd *DefaultDispatcher) RegisterHandlerPB(reqType interface{}, message proto.Message, deal iface.MsgHandlerFuncPB) {
 	reqMsgType := reflect.TypeOf(message).Elem()
-	handler := func(request iface.IRequest, data []byte) error {
+	handler := func(ctx *iface.CatContext, request iface.IRequest, data []byte) error {
 		req := reflect.New(reqMsgType).Elem().Addr().Interface().(proto.Message)
 		if err := proto.Unmarshal(data, req); err != nil {
 			fmt.Println("req Message Unpack err", err, "packName:", reqMsgType.String())
@@ -99,7 +100,7 @@ func (bd *DefaultDispatcher) RegisterHandlerPB(reqType interface{}, message prot
 		defer RecoverPanic()
 
 		// 调用业务回调
-		if err := deal(request, req); err != nil {
+		if err := deal(ctx, request, req); err != nil {
 			fmt.Println("Business Deal err", err)
 		}
 		return nil
@@ -111,7 +112,7 @@ func (bd *DefaultDispatcher) RegisterHandlerPB(reqType interface{}, message prot
 func (bd *DefaultDispatcher) RegisterHandlerSimplePB(reqType, rspType interface{}, reqMsg, rspMsg proto.Message, deal iface.MsgHandlerSimpleFuncPB) {
 	reqMsgType := reflect.TypeOf(reqMsg).Elem()
 	rspMsgType := reflect.TypeOf(rspMsg).Elem()
-	handler := func(request iface.IRequest, data []byte) error {
+	handler := func(ctx *iface.CatContext, request iface.IRequest, data []byte) error {
 		req := reflect.New(reqMsgType).Elem().Addr().Interface().(proto.Message)
 		rsp := reflect.New(rspMsgType).Elem().Addr().Interface().(proto.Message)
 		if err := proto.Unmarshal(data, req); err != nil {
@@ -131,7 +132,7 @@ func (bd *DefaultDispatcher) RegisterHandlerSimplePB(reqType, rspType interface{
 			}
 		}()
 		// 调用业务回调
-		if err := deal(req, rsp); err != nil {
+		if err := deal(ctx, req, rsp); err != nil {
 			fmt.Println("Business Deal err", err)
 		}
 
@@ -142,8 +143,8 @@ func (bd *DefaultDispatcher) RegisterHandlerSimplePB(reqType, rspType interface{
 
 // RegisterHandlerData 注册回调 返回原始数据包,交给用户自己解析
 func (bd *DefaultDispatcher) RegisterHandlerData(reqType interface{}, message imsg.IHeaderPack, deal iface.MsgHandlerFuncData) {
-	handler := func(request iface.IRequest, data []byte) error {
-		if err := deal(request, request.GetHeaderPack()); err != nil {
+	handler := func(ctx *iface.CatContext, request iface.IRequest, data []byte) error {
+		if err := deal(ctx, request, request.GetHeaderPack()); err != nil {
 			fmt.Println("[DefaultDispatcher] deal err", err)
 		}
 

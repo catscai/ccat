@@ -7,9 +7,9 @@ import (
 
 // DefaultHeader 实现基本信息包头
 type DefaultHeader struct {
-	PackType  uint32
+	PackType  uint32 // 包类型,用于消息分发
 	SessionID uint64 // sessionID 用于每次消息交互的唯一区分
-	Data      []byte
+	Data      []byte // 包体数据
 }
 
 func (bm *DefaultHeader) Pack() ([]byte, error) {

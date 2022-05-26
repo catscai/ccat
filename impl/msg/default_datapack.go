@@ -2,7 +2,6 @@ package msg
 
 import (
 	"encoding/binary"
-	"fmt"
 	"io"
 	"net"
 )
@@ -16,7 +15,6 @@ var defaultHeaderLen = 4 // 默认头长度4个字节，表示包的长度
 func (pack *DefaultDataPack) ParseData(conn net.Conn) ([]byte, error) {
 	packLenBytes := make([]byte, defaultHeaderLen)
 	if _, err := io.ReadFull(conn, packLenBytes); err != nil {
-		fmt.Println("ParseData ReadFull err", err)
 		return nil, err
 	}
 	// 解析出包长度
@@ -26,7 +24,6 @@ func (pack *DefaultDataPack) ParseData(conn net.Conn) ([]byte, error) {
 	if packLen > 0 {
 		data = make([]byte, packLen)
 		if _, err := io.ReadFull(conn, data); err != nil {
-			fmt.Println("ParseData ReadFull err", err)
 			return nil, err
 		}
 	}

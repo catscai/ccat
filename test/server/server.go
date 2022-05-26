@@ -8,6 +8,7 @@ import (
 	"ccat/test"
 	"fmt"
 	"github.com/golang/protobuf/proto"
+	"go.uber.org/zap"
 )
 
 type EchoMessage struct {
@@ -55,7 +56,7 @@ func DealSimpleMessage(reqMsg, rspMsg imsg.IMessage) error {
 	return nil
 }
 
-func DealSimplePB(reqMsg, rspMsg proto.Message) error {
+func DealSimplePB(ctx *iface.CatContext, reqMsg, rspMsg proto.Message) error {
 	req := reqMsg.(*test.TestRQ)
 	rsp := rspMsg.(*test.TestRS)
 
@@ -65,7 +66,7 @@ func DealSimplePB(reqMsg, rspMsg proto.Message) error {
 	rsp.Name = req.Name
 	rsp.Age = req.Age
 	rsp.Reply = proto.String("i love you")
-
+	ctx.Info("DealSimplePB recv data", zap.Any("req", *req), zap.Any("rsp", *rsp))
 	return nil
 }
 

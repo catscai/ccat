@@ -1,0 +1,28 @@
+{"level":"info","time":"2022-05-25T17:57:26.909+0800","file":"runtime/asm_amd64.s:1581","msg":"[Client] beginRead start..."}
+{"level":"info","time":"2022-05-25T17:57:26.909+0800","file":"runtime/asm_amd64.s:1581","msg":"[Client] beginWrite start..."}
+{"level":"info","time":"2022-05-25T17:57:26.924+0800","file":"client/client.go:80","msg":"[Client] Success Recv data","session":1653472646909961100}
+{"level":"info","time":"2022-05-25T17:57:27.926+0800","file":"client/client.go:80","msg":"[Client] Success Recv data","session":1653472647926973500}
+{"level":"info","time":"2022-05-25T17:57:28.930+0800","file":"client/client.go:80","msg":"[Client] Success Recv data","session":1653472648929141800}
+{"level":"info","time":"2022-05-25T17:57:29.946+0800","file":"client/client.go:80","msg":"[Client] Success Recv data","session":1653472649946010300}
+{"level":"info","time":"2022-05-25T17:57:30.953+0800","file":"client/client.go:80","msg":"[Client] Success Recv data","session":1653472650953907800}
+{"level":"info","time":"2022-05-25T17:57:31.957+0800","file":"client/client.go:80","msg":"[Client] Success Recv data","session":1653472651956459200}
+{"level":"info","time":"2022-05-25T17:57:32.959+0800","file":"client/client.go:80","msg":"[Client] Success Recv data","session":1653472652959593100}
+{"level":"info","time":"2022-05-25T17:57:33.963+0800","file":"client/client.go:80","msg":"[Client] Success Recv data","session":1653472653961967300}
+{"level":"info","time":"2022-05-25T17:57:34.970+0800","file":"client/client.go:80","msg":"[Client] Success Recv data","session":1653472654968583000}
+{"level":"info","time":"2022-05-25T17:57:35.973+0800","file":"client/client.go:80","msg":"[Client] Success Recv data","session":1653472655973396700}
+{"level":"info","time":"2022-05-25T17:57:36.977+0800","file":"client/client.go:80","msg":"[Client] Success Recv data","session":1653472656976915500}
+{"level":"info","time":"2022-05-25T17:57:37.987+0800","file":"client/client.go:80","msg":"[Client] Success Recv data","session":1653472657986709800}
+{"level":"info","time":"2022-05-25T17:57:38.992+0800","file":"client/client.go:80","msg":"[Client] Success Recv data","session":1653472658992336100}
+{"level":"info","time":"2022-05-25T17:57:39.996+0800","file":"client/client.go:80","msg":"[Client] Success Recv data","session":1653472659995330900}
+{"level":"info","time":"2022-05-25T17:57:41.006+0800","file":"client/client.go:80","msg":"[Client] Success Recv data","session":1653472661006070500}
+{"level":"error","time":"2022-05-25T17:57:41.802+0800","file":"runtime/asm_amd64.s:1581","msg":"[Client] DataPack.ParseData failed","error":"read tcp4 127.0.0.1:54331->127.0.0.1:2233: wsarecv: An existing connection was forcibly closed by the remote host."}
+{"level":"info","time":"2022-05-25T17:57:41.802+0800","file":"runtime/asm_amd64.s:1581","msg":"[Client] release connection close","remoteAddr":"127.0.0.1:2233"}
+{"level":"info","time":"2022-05-25T18:02:43.949+0800","file":"runtime/asm_amd64.s:1581","msg":"[Client] beginRead start..."}
+{"level":"info","time":"2022-05-25T18:02:43.949+0800","file":"runtime/asm_amd64.s:1581","msg":"[Client] beginWrite start..."}
+{"level":"info","time":"2022-05-25T18:02:43.966+0800","file":"client/client.go:80","msg":"[Client] Success Recv data","session":1653472963950493100}
+{"level":"info","time":"2022-05-25T18:02:44.967+0800","file":"client/client.go:80","msg":"[Client] Success Recv data","session":1653472964967625700}
+{"level":"info","time":"2022-05-25T18:02:45.976+0800","file":"client/client.go:80","msg":"[Client] Success Recv data","session":1653472965976535500}
+{"level":"info","time":"2022-05-25T18:02:46.986+0800","file":"client/client.go:80","msg":"[Client] Success Recv data","session":1653472966985944900}
+{"level":"info","time":"2022-05-25T18:02:47.996+0800","file":"client/client.go:80","msg":"[Client] Success Recv data","session":1653472967994786500}
+{"level":"info","time":"2022-05-25T18:02:48.998+0800","file":"client/client.go:80","msg":"[Client] Success Recv data","session":1653472968997173400}
+{"level":"info","time":"2022-05-25T18:02:50.005+0800","file":"client/client.go:80","msg":"[Client] Success Recv data","session":1653472970004642600}

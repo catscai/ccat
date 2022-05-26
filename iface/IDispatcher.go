@@ -18,10 +18,10 @@ type IDispatcher interface {
 	Remove(reqType interface{}) // 删除回调映射关系
 }
 
-type MsgHandlerFunc func(request IRequest, iMessage imsg.IMessage) error
-type MsgHandlerSimpleFunc func(reqMsg, rspMsg imsg.IMessage) error
+type MsgHandlerFunc func(ctx *CatContext, request IRequest, iMessage imsg.IMessage) error
+type MsgHandlerSimpleFunc func(ctx *CatContext, reqMsg, rspMsg imsg.IMessage) error
 
-type MsgHandlerFuncPB func(request IRequest, iMessage proto.Message) error
-type MsgHandlerSimpleFuncPB func(reqMsg, rspMsg proto.Message) error
+type MsgHandlerFuncPB func(ctx *CatContext, request IRequest, iMessage proto.Message) error
+type MsgHandlerSimpleFuncPB func(ctx *CatContext, reqMsg, rspMsg proto.Message) error
 
-type MsgHandlerFuncData func(request IRequest, iMessage imsg.IHeaderPack) error
+type MsgHandlerFuncData func(ctx *CatContext, request IRequest, iMessage imsg.IHeaderPack) error

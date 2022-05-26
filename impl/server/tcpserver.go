@@ -1,15 +1,18 @@
 package server
 
 import (
+	"ccat/clog"
 	"ccat/config"
 	"ccat/iface"
 	"ccat/iface/imsg"
 	"fmt"
+	"go.uber.org/zap"
 	"net"
 )
 
 // TcpService tcp 服务
 type TcpService struct {
+	clog.ICatLog
 	Name             string
 	IPVer            string
 	IP               string
@@ -28,11 +31,11 @@ type TcpService struct {
 func (t *TcpService) Start() {
 	lsn, err := net.Listen(t.IPVer, fmt.Sprintf("%s:%d", t.IP, t.Port))
 	if err != nil {
-		fmt.Println("[Tcp Service] listen err", err)
+		t.Error("[Tcp Service] listen failed", zap.Any("err", err))
 		return
 	}
 
-	fmt.Println("[Tcp Service] Start listen...")
+	t.Info("[Tcp Service] Start listen...")
 	// 退出关闭 释放资源
 	defer t.Stop()
 	maxConnLimit := uint32(0)
@@ -48,13 +51,14 @@ func (t *TcpService) Start() {
 		default:
 			conn, err := lsn.Accept()
 			if err != nil {
-				fmt.Println("[Tcp Service] accept err", err)
-				break
+				t.Error("[Tcp Service] accept failed", zap.Any("err", err))
+				continue
 			}
 
 			// 超出最大连接后，拒绝连接
 			if maxConnLimit > 0 && connID >= maxConnLimit {
-				fmt.Println("[Tcp Service] the number of connection over limit")
+				t.Warn("[Tcp Service] the number of connection over limit",
+					zap.Any("curNum", connID+1), zap.Any("maxConnLimit", maxConnLimit))
 				conn.Close()
 				continue
 			}
@@ -78,12 +82,12 @@ func (t *TcpService) Stop() {
 
 func (t *TcpService) Run() {
 	cfg := config.GetTcpServiceCfg(t.GetName())
-	t.WorkerGroup.Init(t, cfg.WorkerGroup.Size, cfg.WorkerGroup.QueueLength)
+	t.WorkerGroup.Init(t.ICatLog, t, cfg.WorkerGroup.Size, cfg.WorkerGroup.QueueLength)
 	t.WorkerGroup.Start()
 
 	go t.Start()
 
-	fmt.Println("[Tcp Service] Running...")
+	t.Info("[Tcp Service] Running...")
 }
 
 // GetDataPack 获取数据包处理对象

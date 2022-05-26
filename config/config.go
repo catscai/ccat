@@ -6,18 +6,13 @@ import (
 	"os"
 )
 
-func init() {
-	if err := Reload(); err != nil {
-		panic(fmt.Sprintf("[Config] Reload err:%+v", err))
-	}
-}
-
 // 默认配置路径
 var cfgPath = "./conf/ccat.yaml"
 
 type GlobalCfg struct {
 	TcpCfg       map[string]*TcpServiceCfg `yaml:"tcp_service"`
 	IsTcpService bool
+	LogCfg       *CatLogCfg `yaml:"log"`
 }
 
 var AppCfg *GlobalCfg
@@ -31,6 +26,17 @@ type TcpServiceCfg struct {
 	Port        uint32          `yaml:"port"`
 	MaxConn     uint32          `yaml:"max_conn"`
 	WorkerGroup *WorkerGroupCfg `yaml:"worker_group"`
+}
+
+type CatLogCfg struct {
+	AppName    string `yaml:"app_name"`
+	LogDir     string `yaml:"log_dir"`
+	Level      string `yaml:"level"`
+	MaxSize    int    `yaml:"max_size"`
+	MaxAge     int    `yaml:"max_age"`
+	MaxBackups int    `yaml:"max_backups"`
+	Console    bool   `yaml:"console"`
+	IsFuncName bool   `yaml:"func"`
 }
 
 type BaseServiceCfg struct {
@@ -51,6 +57,15 @@ func Reload() error {
 	}
 	cfg := GlobalCfg{
 		IsTcpService: false,
+		LogCfg: &CatLogCfg{
+			AppName:    "project",
+			LogDir:     "./logs/",
+			Level:      "debug",
+			MaxSize:    128,
+			MaxAge:     7,
+			MaxBackups: 30,
+			Console:    false,
+		},
 	}
 	if err = yaml.Unmarshal(data, &cfg); err != nil {
 		fmt.Println("[Config] yaml Unmarshal err", err)
@@ -73,7 +88,7 @@ func Reload() error {
 	if len(cfg.TcpCfg) > 0 {
 		cfg.IsTcpService = true
 	}
-	fmt.Printf("[Config] global %+v\n", cfg)
+	fmt.Printf("[Config] global %+v\nlog:%+v\n", cfg, *cfg.LogCfg)
 	AppCfg = &cfg
 	return nil
 }

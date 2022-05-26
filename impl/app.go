@@ -1,10 +1,12 @@
 package impl
 
 import (
+	"ccat/clog"
 	"ccat/iface"
 )
 
 type App struct {
+	clog.ICatLog
 	ServerMap map[string]iface.IServer
 }
 
