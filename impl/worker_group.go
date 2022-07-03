@@ -5,7 +5,6 @@ import (
 	"ccat/iface"
 	"fmt"
 	"go.uber.org/zap"
-	"time"
 )
 
 type WorkerGroup struct {
@@ -84,7 +83,6 @@ func (wg *WorkerGroup) SetShardWorkerFunc(f iface.ShardWorkerHandlerFunc) {
 // DefaultShardFunc 默认的工作者选择
 func (wg *WorkerGroup) DefaultShardFunc(request iface.IRequest) uint32 {
 	workerSize := wg.GetWorkerSize()
-	now := time.Now().UnixNano()
 
-	return uint32(now % int64(workerSize))
+	return request.GetConn().GetConnID() % workerSize
 }
