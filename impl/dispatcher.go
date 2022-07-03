@@ -1,16 +1,19 @@
 package impl
 
 import (
+	"ccat/clog"
 	"ccat/iface"
 	"ccat/iface/imsg"
 	"context"
 	"fmt"
 	"github.com/golang/protobuf/proto"
+	"go.uber.org/zap"
 	"reflect"
 )
 
 // DefaultDispatcher 保存包与回调业务映射关系，业务分发
 type DefaultDispatcher struct {
+	clog.ICatLog
 	MsgHandlerMap map[interface{}]func(ctx *iface.CatContext, request iface.IRequest, data []byte) error
 	Server        iface.IServer
 }
@@ -21,30 +24,31 @@ func (bd *DefaultDispatcher) Dispatch(request iface.IRequest) {
 		f(iface.NewCatContext(context.TODO(), request.GetConn()), request,
 			request.GetHeaderPack().GetData())
 	} else {
-		fmt.Println("Not found message handler, packType", request.GetHeaderPack().GetPackType())
+		bd.Warn(fmt.Sprintf("[Dispatch] not found message handler, packType %d",
+			request.GetHeaderPack().GetPackType()))
 	}
 }
 
 // RegisterHandler 注册消息回调
 func (bd *DefaultDispatcher) RegisterHandler(packType interface{}, message imsg.IMessage, deal iface.MsgHandlerFunc) {
-	fmt.Println("RegisterHandler packType", packType)
+	bd.Info(fmt.Sprintf("[RegisterHandler] register package packType %v", packType))
 	msgType := reflect.TypeOf(message).Elem()
 	msgTypeName := msgType.String()
-	fmt.Println("msgTypeName", msgTypeName)
+	// fmt.Println("msgTypeName", msgTypeName)
 	handler := func(ctx *iface.CatContext, request iface.IRequest, data []byte) error {
 		// 利用反射创建新对象
 		req := reflect.New(msgType).Elem().Addr().Interface().(imsg.IMessage)
-		fmt.Println("handler req", req)
+		// fmt.Println("handler req", req)
 		if err := req.Unpack(data); err != nil {
-			fmt.Println("req Message Unpack err", err, "packName:", msgTypeName)
+			bd.Error(fmt.Sprintf("[RegisterHandler] req message Unpack err:%v packName:%s", err, msgTypeName))
 			return err
 		}
 
 		// todo 加一个recover panic 捕捉业务处理时(deal执行时)的异常情况
-		defer RecoverPanic()
+		defer RecoverPanic(bd)
 		// 调用业务回调
 		if err := deal(ctx, request, req); err != nil {
-			fmt.Println("Business Deal err", err)
+			bd.Error(fmt.Sprintf("[RegisterHandler] Business Deal packType:%v err:%v", packType, err))
 			return err
 		}
 		return nil
@@ -62,25 +66,29 @@ func (bd *DefaultDispatcher) RegisterHandlerSimple(reqType, rspType interface{},
 		req := reflect.New(reqMsgType).Elem().Addr().Interface().(imsg.IMessage)
 		rsp := reflect.New(rspMsgType).Elem().Addr().Interface().(imsg.IMessage)
 		if err := req.Unpack(data); err != nil {
-			fmt.Println("req Message Unpack err", err, "packName:", reqMsgType.String())
+			bd.Error(fmt.Sprintf("[RegisterHandlerSimple] req message Unpack err:%v packName:%s",
+				err, reqMsgType.String()))
 			return err
 		}
-		defer RecoverPanic()
+		defer RecoverPanic(bd)
 
 		defer func() {
 			rspData, err := rsp.Pack()
 			if err != nil {
-				fmt.Println("[DefaultDispatcher] rsp.Pack err", err)
+				bd.Error(fmt.Sprintf("[RegisterHandlerSimple] rsp.Pack reqType:%v rspType:%v err:%v",
+					reqType, rspType, err))
 				return
 			}
 			pkg := bd.Server.GetHeaderOperator().Full(rspType, rspData, request.GetHeaderPack())
 			if err := request.GetConn().SendMsg(pkg); err != nil {
-				fmt.Println("SendMsg err", err)
+				bd.Error(fmt.Sprintf("[RegisterHandlerSimple] SendMsg reqType:%v rspType:%d err:%v",
+					reqType, rspType, err))
 			}
 		}()
 		// 调用业务回调
 		if err := deal(ctx, req, rsp); err != nil {
-			fmt.Println("Business Deal err", err)
+			bd.Error(fmt.Sprintf("[RegisterHandlerSimple] Business Deal reqType:%d rspType:%d err:%v",
+				reqType, rspType, err))
 		}
 
 		return nil
@@ -94,14 +102,15 @@ func (bd *DefaultDispatcher) RegisterHandlerPB(reqType interface{}, message prot
 	handler := func(ctx *iface.CatContext, request iface.IRequest, data []byte) error {
 		req := reflect.New(reqMsgType).Elem().Addr().Interface().(proto.Message)
 		if err := proto.Unmarshal(data, req); err != nil {
-			fmt.Println("req Message Unpack err", err, "packName:", reqMsgType.String())
+			bd.Error(fmt.Sprintf("[RegisterHandlerPB] req message Unpack reqType:%v err:%v packName:%v",
+				reqType, err, reqMsgType.String()))
 			return err
 		}
-		defer RecoverPanic()
+		defer RecoverPanic(bd)
 
 		// 调用业务回调
 		if err := deal(ctx, request, req); err != nil {
-			fmt.Println("Business Deal err", err)
+			bd.Error(fmt.Sprintf("[RegisterHandlerPB] Business Deal reqType:%v err:%v", reqType, err))
 		}
 		return nil
 	}
@@ -116,24 +125,28 @@ func (bd *DefaultDispatcher) RegisterHandlerSimplePB(reqType, rspType interface{
 		req := reflect.New(reqMsgType).Elem().Addr().Interface().(proto.Message)
 		rsp := reflect.New(rspMsgType).Elem().Addr().Interface().(proto.Message)
 		if err := proto.Unmarshal(data, req); err != nil {
-			fmt.Println("req Message Unpack err", err, "packName:", reqMsgType.String())
+			bd.Error(fmt.Sprintf("[RegisterHandlerSimplePB] req message Unpack reqType:%v rspType:%v err:%v packName:%v",
+				reqType, rspType, err, reqMsgType.String()))
 			return err
 		}
-		defer RecoverPanic()
+		defer RecoverPanic(bd)
 		defer func() {
 			rspData, err := proto.Marshal(rsp)
 			if err != nil {
-				fmt.Println("[DefaultDispatcher] proto.Marshal err", err)
+				bd.Error(fmt.Sprintf("[RegisterHandlerSimplePB] proto.Marshal reqType:%v rspType:%v err:%v",
+					reqType, rspType, err))
 				return
 			}
 			pkg := bd.Server.GetHeaderOperator().Full(rspType, rspData, request.GetHeaderPack())
 			if err = request.GetConn().SendMsg(pkg); err != nil {
-				fmt.Println("[DefaultDispatcher] SendMsg err", err)
+				bd.Error(fmt.Sprintf("[RegisterHandlerSimplePB] SendMsg reqType:%v rspType:%v err:%v",
+					reqType, rspType, err))
 			}
 		}()
 		// 调用业务回调
 		if err := deal(ctx, req, rsp); err != nil {
-			fmt.Println("Business Deal err", err)
+			bd.Error(fmt.Sprintf("[RegisterHandlerSimple] Business Deal reqType:%d rspType:%d err:%v",
+				reqType, rspType, err))
 		}
 
 		return nil
@@ -145,7 +158,8 @@ func (bd *DefaultDispatcher) RegisterHandlerSimplePB(reqType, rspType interface{
 func (bd *DefaultDispatcher) RegisterHandlerData(reqType interface{}, message imsg.IHeaderPack, deal iface.MsgHandlerFuncData) {
 	handler := func(ctx *iface.CatContext, request iface.IRequest, data []byte) error {
 		if err := deal(ctx, request, request.GetHeaderPack()); err != nil {
-			fmt.Println("[DefaultDispatcher] deal err", err)
+			bd.Error(fmt.Sprintf("[RegisterHandlerSimple] Business Deal reqType:%d err:%v",
+				reqType, err))
 		}
 
 		return nil
@@ -158,8 +172,8 @@ func (bd *DefaultDispatcher) Remove(packType interface{}) {
 	delete(bd.MsgHandlerMap, packType)
 }
 
-func RecoverPanic() {
+func RecoverPanic(logger clog.ICatLog) {
 	if r := recover(); r != nil {
-		fmt.Println("[Panic] deal req:", r)
+		logger.Panic("[Panic] deal req", zap.Any("err", r))
 	}
 }

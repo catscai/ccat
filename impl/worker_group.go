@@ -62,7 +62,7 @@ func (wg *WorkerGroup) GetWorkerSize() uint32 {
 
 func (wg *WorkerGroup) work(id uint32, q chan iface.IRequest) {
 	defer close(q)
-	defer fmt.Printf("[WorkerGroup] id = %d exit", id)
+	defer wg.logger.Info(fmt.Sprintf("[WorkerGroup] id = %d exit", id))
 	for {
 		select {
 		case <-wg.ExitChan:

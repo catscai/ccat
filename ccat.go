@@ -61,6 +61,7 @@ func NewTcpService(name, ipVer, ip string, port uint32) iface.IServer {
 		HeaderOperator: &msg.DefaultHeaderOperator{},
 	}
 	dispatcher := &impl.DefaultDispatcher{
+		ICatLog:       clog.AppLogger().Clone(),
 		MsgHandlerMap: make(map[interface{}]func(ctx *iface.CatContext, request iface.IRequest, data []byte) error),
 		Server:        ser,
 	}
