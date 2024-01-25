@@ -1,4 +1,4 @@
-package ccat
+package server
 
 import (
 	"fmt"

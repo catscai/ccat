@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/catscai/ccat/ccat"
 	"github.com/catscai/ccat/iface"
 	"github.com/catscai/ccat/iface/imsg"
 	"github.com/catscai/ccat/impl/msg"
+	"github.com/catscai/ccat/server"
 	"github.com/catscai/ccat/test"
 	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
@@ -82,7 +82,7 @@ const (
 )
 
 func main() {
-	service := ccat.GetServer("tcp_test")
+	service := server.GetServer("tcp_test")
 	if service == nil {
 		fmt.Println("get service is nil")
 		return
@@ -91,5 +91,5 @@ func main() {
 	service.GetDispatcher().RegisterHandler(TestPackType1RQ, &EchoMessage{}, Deal)
 	service.GetDispatcher().RegisterHandlerSimple(TestPackType2RQ, TestPackType2RS, &EchoMessage{}, &EchoMessage{}, DealSimpleMessage)
 	service.GetDispatcher().RegisterHandlerSimplePB(TestPackType3RQ, TestPackType4RS, &test.TestRQ{}, &test.TestRS{}, DealSimplePB)
-	ccat.Run()
+	server.Run()
 }
