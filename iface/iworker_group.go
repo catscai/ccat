@@ -1,6 +1,6 @@
 package iface
 
-import "ccat/clog"
+import "github.com/catscai/ccat/clog"
 
 // IWorkerGroup 工作者组
 type IWorkerGroup interface {

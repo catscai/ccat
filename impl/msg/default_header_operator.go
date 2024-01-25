@@ -1,6 +1,6 @@
 package msg
 
-import "ccat/iface/imsg"
+import "github.com/catscai/ccat/iface/imsg"
 
 // DefaultHeaderOperator 默认的包头操作者,如果用户不想使用默认的包头来解析,只需要自定义包头,然后重写操作者设置到server中即可
 type DefaultHeaderOperator struct {

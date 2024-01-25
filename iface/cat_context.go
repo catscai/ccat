@@ -1,8 +1,8 @@
 package iface
 
 import (
-	"ccat/clog"
 	"context"
+	"github.com/catscai/ccat/clog"
 )
 
 type CatContext struct {

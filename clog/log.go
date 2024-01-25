@@ -1,7 +1,7 @@
 package clog
 
 import (
-	"ccat/config"
+	"github.com/catscai/ccat/config"
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

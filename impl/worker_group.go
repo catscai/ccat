@@ -1,9 +1,9 @@
 package impl
 
 import (
-	"ccat/clog"
-	"ccat/iface"
 	"fmt"
+	"github.com/catscai/ccat/clog"
+	"github.com/catscai/ccat/iface"
 	"go.uber.org/zap"
 )
 

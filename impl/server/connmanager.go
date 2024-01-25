@@ -1,7 +1,7 @@
 package server
 
 import (
-	"ccat/iface"
+	"github.com/catscai/ccat/iface"
 	"sync"
 )
 

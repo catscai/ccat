@@ -1,7 +1,7 @@
 package iface
 
 import (
-	"ccat/iface/imsg"
+	"github.com/catscai/ccat/iface/imsg"
 )
 
 // IRequest 表示一个请求， 包含连接信息，和数据包

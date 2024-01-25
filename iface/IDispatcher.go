@@ -1,7 +1,7 @@
 package iface
 
 import (
-	"ccat/iface/imsg"
+	"github.com/catscai/ccat/iface/imsg"
 	"github.com/golang/protobuf/proto"
 )
 

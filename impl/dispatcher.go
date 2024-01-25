@@ -1,11 +1,11 @@
 package impl
 
 import (
-	"ccat/clog"
-	"ccat/iface"
-	"ccat/iface/imsg"
 	"context"
 	"fmt"
+	"github.com/catscai/ccat/clog"
+	"github.com/catscai/ccat/iface"
+	"github.com/catscai/ccat/iface/imsg"
 	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
 	"reflect"

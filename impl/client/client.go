@@ -1,11 +1,11 @@
 package client
 
 import (
-	"ccat/clog"
-	"ccat/iface/imsg"
 	"context"
 	"errors"
 	"fmt"
+	"github.com/catscai/ccat/clog"
+	"github.com/catscai/ccat/iface/imsg"
 	"go.uber.org/zap"
 	"net"
 	"sync"

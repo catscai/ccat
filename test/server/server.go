@@ -1,12 +1,12 @@
 package main
 
 import (
-	"ccat"
-	"ccat/iface"
-	"ccat/iface/imsg"
-	"ccat/impl/msg"
-	"ccat/test"
 	"fmt"
+	"github.com/catscai/ccat/ccat"
+	"github.com/catscai/ccat/iface"
+	"github.com/catscai/ccat/iface/imsg"
+	"github.com/catscai/ccat/impl/msg"
+	"github.com/catscai/ccat/test"
 	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
 )

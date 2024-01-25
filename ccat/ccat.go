@@ -1,13 +1,13 @@
 package ccat
 
 import (
-	"ccat/clog"
-	"ccat/config"
-	"ccat/iface"
-	"ccat/impl"
-	"ccat/impl/msg"
-	server2 "ccat/impl/server"
 	"fmt"
+	"github.com/catscai/ccat/clog"
+	"github.com/catscai/ccat/config"
+	"github.com/catscai/ccat/iface"
+	"github.com/catscai/ccat/impl"
+	"github.com/catscai/ccat/impl/msg"
+	server2 "github.com/catscai/ccat/impl/server"
 )
 
 // 全局项目app

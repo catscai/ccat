@@ -1,12 +1,12 @@
 package main
 
 import (
-	"ccat/clog"
-	"ccat/iface/imsg"
-	"ccat/impl/client"
-	"ccat/impl/msg"
-	"ccat/test"
 	"fmt"
+	"github.com/catscai/ccat/clog"
+	"github.com/catscai/ccat/iface/imsg"
+	"github.com/catscai/ccat/impl/client"
+	"github.com/catscai/ccat/impl/msg"
+	"github.com/catscai/ccat/test"
 	"github.com/golang/protobuf/proto"
 	"net"
 	"time"

@@ -1,8 +1,8 @@
 package server
 
 import (
-	"ccat/iface"
-	"ccat/iface/imsg"
+	"github.com/catscai/ccat/iface"
+	"github.com/catscai/ccat/iface/imsg"
 )
 
 type Request struct {

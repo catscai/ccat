@@ -1,11 +1,11 @@
 package server
 
 import (
-	"ccat/clog"
-	"ccat/config"
-	"ccat/iface"
-	"ccat/iface/imsg"
 	"fmt"
+	"github.com/catscai/ccat/clog"
+	"github.com/catscai/ccat/config"
+	"github.com/catscai/ccat/iface"
+	"github.com/catscai/ccat/iface/imsg"
 	"go.uber.org/zap"
 	"net"
 )

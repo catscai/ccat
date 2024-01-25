@@ -1,8 +1,8 @@
 package impl
 
 import (
-	"ccat/clog"
-	"ccat/iface"
+	"github.com/catscai/ccat/clog"
+	"github.com/catscai/ccat/iface"
 )
 
 type App struct {
